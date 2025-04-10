@@ -4,8 +4,8 @@ import os
 from typing import List, Dict, Any, Optional, Tuple
 import traceback # For detailed error logging
 
-from .models import SchemaModel
-from config.settings import load_config
+from .models import SchemaModel, UploadLog # Correct name
+from config.settings import Settings # Import Settings class
 from .database import SessionLocal # Import SessionLocal for DB operations
 from .schema_manager import create_upload_log, get_schema_by_name # Import the logging function and get_schema_by_name
 from config.logging_config import get_logger # Import logger
@@ -13,7 +13,11 @@ from config.logging_config import get_logger # Import logger
 logger = get_logger(__name__) # Get logger for this module
 
 # Load configuration
-settings = load_config()
+try:
+    settings = Settings()
+except Exception as e:
+    logger.critical(f"Failed to load settings in milvus_uploader.py: {e}", exc_info=True)
+    raise RuntimeError(f"Milvus uploader configuration failed: {e}") from e
 
 # Define data directory
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')

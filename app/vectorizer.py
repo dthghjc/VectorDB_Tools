@@ -13,13 +13,18 @@ except ImportError:
     requests = None
 
 from .models import SchemaModel
-from config.settings import load_config
+from config.settings import Settings # Import Settings class
 from config.logging_config import get_logger # Import logger
 
 logger = get_logger(__name__) # Get logger for this module
 
-# Load configuration for API keys and base URLs
-settings = load_config()
+# Load configuration by instantiating Settings
+try:
+    settings = Settings()
+except Exception as e:
+    logger.critical(f"Failed to load settings in vectorizer.py: {e}", exc_info=True)
+    # Depending on how critical config is, either raise, exit, or use defaults/dummies
+    raise RuntimeError(f"Vectorizer configuration failed: {e}") from e
 
 # Define data directory relative to this file's location (consistent with data_processor)
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')

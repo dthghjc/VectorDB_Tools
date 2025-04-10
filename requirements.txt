@@ -10,4 +10,10 @@ openai
 pytest
 pydantic
 pandas
-requests 
+requests
+
+# Add pydantic-settings
+pydantic-settings>=2.0.0
+
+# Add logging config dependency if needed
+PyYAML 

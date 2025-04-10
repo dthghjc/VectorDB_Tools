@@ -1,70 +1,77 @@
 import os
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field, HttpUrl, SecretStr
+from pydantic import HttpUrl, SecretStr, computed_field, ConfigDict
+from pydantic_settings import BaseSettings
 from typing import Optional
+from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# Find the .env file starting from the current directory and going up
-dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path=dotenv_path)
-else:
-    # Fallback for cases where the script is run from the root directory
-    load_dotenv()
+# 加载 .env 文件
+load_dotenv()
 
-class Settings(BaseModel):
+
+class Settings(BaseSettings):
+    # Tell BaseSettings to load variables from .env file
+    # And handle case insensitivity for environment variables
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding='utf-8',
+        case_sensitive=False, # Environment variables are often uppercase
+        extra='ignore' # Ignore extra env vars not defined in the model
+    )
+
     # MySQL
-    mysql_host: str = Field(..., env='MYSQL_HOST')
-    mysql_port: int = Field(..., env='MYSQL_PORT')
-    mysql_user: str = Field(..., env='MYSQL_USER')
-    mysql_password: SecretStr = Field(..., env='MYSQL_PASSWORD')
-    mysql_db: str = Field(..., env='MYSQL_DB')
+    mysql_host: str
+    mysql_port: int
+    mysql_user: str
+    mysql_password: SecretStr # BaseSettings handles SecretStr automatically
+    mysql_db: str
 
     # OpenAI
-    openai_api_key: SecretStr = Field(..., env='OPENAI_API_KEY')
-    openai_base_url: HttpUrl = Field(..., env='OPENAI_BASE_URL')
+    openai_api_key: SecretStr # BaseSettings handles SecretStr automatically
+    openai_base_url: HttpUrl # BaseSettings handles HttpUrl automatically
 
-    # BGE (Optional - add validation if needed)
-    bge_api_key: Optional[SecretStr] = Field(None, env='BGE_API_KEY')
-    bge_base_url: Optional[HttpUrl] = Field(None, env='BGE_BASE_URL')
+    # BGE (Optional)
+    bge_api_key: Optional[SecretStr] = None # Use None as default for Optional fields
+    bge_base_url: Optional[HttpUrl] = None
 
     # Gradio
-    gradio_username: str = Field(..., env='GRADIO_USERNAME')
-    gradio_password: SecretStr = Field(..., env='GRADIO_PASSWORD')
+    gradio_username: str
+    gradio_password: SecretStr # BaseSettings handles SecretStr automatically
+    gradio_port: int = 7860 # Provide default value directly
 
     # Milvus Connection
-    milvus_host: str = Field('localhost', env='MILVUS_HOST')
-    milvus_port: int = Field(19530, env='MILVUS_PORT')
+    milvus_host: str = 'localhost' # Provide default value directly
+    milvus_port: int = 19530 # Provide default value directly
+    milvus_token: Optional[SecretStr] = None # Add MILVUS_TOKEN from your .env example
 
-    # Database URL (constructed)
+    # Database URL (constructed using computed_field)
+    @computed_field
     @property
     def database_url(self) -> str:
-        # Ensure password is revealed for the URL connection string
+        # BaseSettings ensures required fields are present before computed_field runs
         password = self.mysql_password.get_secret_value()
         return f"mysql+mysqlconnector://{self.mysql_user}:{password}@{self.mysql_host}:{self.mysql_port}/{self.mysql_db}"
 
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-        # Allow extra fields if needed, though we define all expected ones
-        extra = 'ignore'
-
-def load_config() -> Settings:
-    """Loads configuration from environment variables."""
-    try:
-        settings = Settings()
-        return settings
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
-        # Consider raising the exception or exiting if config is critical
-        raise ValueError("Configuration could not be loaded. Check your .env file and environment variables.") from e
+# No need for a separate load_config function
+# Just instantiate the class where needed: config = Settings()
 
 # Example usage (optional, for testing)
 if __name__ == "__main__":
-    config = load_config()
-    print("Configuration loaded successfully:")
-    # Use .dict() carefully, especially with secrets
-    print(config.dict(exclude={'mysql_password', 'openai_api_key', 'bge_api_key', 'gradio_password'}))
-    print(f"Database URL: {config.database_url}")
-    # Access secrets safely
-    print(f"OpenAI Key starts with: {config.openai_api_key.get_secret_value()[:5]}...") 
+    import sys
+    try:
+        config = Settings()
+        print("\nConfiguration loaded successfully via BaseSettings:")
+        # Use model_dump() in Pydantic V2
+        print(config.model_dump(exclude={'mysql_password', 'openai_api_key', 'bge_api_key', 'gradio_password', 'milvus_token'}))
+        print(f"Database URL: {config.database_url}")
+        # Access secrets safely
+        if config.openai_api_key:
+             print(f"OpenAI Key starts with: {config.openai_api_key.get_secret_value()[:5]}...")
+        else:
+             print("OpenAI Key is not set.")
+        if config.milvus_token:
+             print(f"Milvus Token is set.")
+        else:
+             print("Milvus Token is not set.")
+    except Exception as e: # Catch potential validation errors during instantiation
+        print(f"\nFailed to load configuration: {e}", file=sys.stderr)
+        sys.exit(1) 
