@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.log
+
+# Env and secrets
+.env
+*.env
+
+# Virtual env
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data and temp files
+data/
+*.jsonl
+*.db
+
+# Editor and IDE
+.vscode/
+.idea/
+
+# Cursor AI
+.cursor/
+project-spec.md
+.cursorrules
+
+# Build
+build/
+dist/
+*.egg-info
+
+# Docker
+*.pid
+*.sock
+
+# Jupyter
+.ipynb_checkpoints/
+
+# docs
+docs/

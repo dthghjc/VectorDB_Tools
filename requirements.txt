@@ -1,0 +1,13 @@
+gradio
+pymilvus
+sqlalchemy
+python-dotenv
+mysql-connector-python
+openai
+# Add BGE client library if needed, e.g., sentence-transformers or a specific client
+
+# Testing libraries
+pytest
+pydantic
+pandas
+requests 
