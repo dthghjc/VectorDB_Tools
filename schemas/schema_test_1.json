@@ -1,0 +1,21 @@
+{
+  "description": "",
+  "fields": [
+    {
+      "name": "id",
+      "type": "INT64",
+      "is_primary": true
+    },
+    {
+      "name": "vec",
+      "type": "FLOAT_VECTOR",
+      "is_primary": false,
+      "dim": 1024
+    },
+    {
+      "name": "dd",
+      "type": "JSON",
+      "is_primary": false
+    }
+  ]
+}

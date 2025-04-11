@@ -45,3 +45,6 @@ dist/
 
 # docs
 docs/
+
+# tests
+tests/
