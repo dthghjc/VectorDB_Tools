@@ -1,50 +1,134 @@
-# Python
-__pycache__/
-*.py[cod]
-*.so
-*.log
+# ===================================================================
+#  通用规则 (General)
+# ===================================================================
 
-# Env and secrets
+# 忽略所有 .env 文件，它们通常包含敏感的密钥和配置
+# 推荐创建一个 .env.example 文件并提交到版本库作为模板
 .env
-*.env
+.env.*
+!.env.example
 
-# Virtual env
+# 日志文件
+*.log
+logs/
+*.logs
+
+# 压缩包和打包文件
+*.tar
+*.tgz
+*.zip
+*.rar
+*.7z
+
+
+# ===================================================================
+#  Python (Backend: FastAPI, SQLAlchemy, Alembic, UV)
+# ===================================================================
+
+# 虚拟环境目录
 .venv/
 venv/
-ENV/
+env/
+pyvenv/
+__packages__/
 
-# OS
-.DS_Store
-Thumbs.db
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Data and temp files
-data/
-*.jsonl
+# 运行时和测试文件
+.pytest_cache/
+.coverage
+htmlcov/
+nosetests.xml
+coverage.xml
+
+# 数据库文件 (例如本地开发的 SQLite)
+*.sqlite3
 *.db
 
-# Editor and IDE
-.vscode/
+# IPython / Jupyter Notebook
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+
+# ===================================================================
+#  前端 (Frontend: React + TS + Vite + pnpm + Tailwind CSS)
+# ===================================================================
+
+# 依赖目录
+node_modules/
+
+# 构建产物目录 (Vite 默认为 dist)
+dist/
+build/
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript 缓存和构建输出
+*.tsbuildinfo
+
+# Vite 本地配置和缓存
+.vite/
+
+# Tailwind CSS 缓存 (适用于 v3 和 v4)
+.tailwindcss/
+
+
+# ===================================================================
+#  平台与服务 (Platforms & Services)
+# ===================================================================
+
+# Supabase
+# 忽略由 Supabase CLI 生成的本地开发文件和配置
+supabase/.branches/
+supabase/.temp/
+supabase/db/volumes/
+
+# Milvus (向量数据库)
+# 忽略由 Docker Compose 或本地部署生成的 Milvus 数据卷和日志
+# 这些目录名取决于你的 docker-compose.yml 或本地配置
+milvus-data/
+volumes/
+wal/
+
+
+# ===================================================================
+#  IDE 和编辑器配置 (IDE & Editors)
+# ===================================================================
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# JetBrains (PyCharm, WebStorm, etc.)
 .idea/
 
-# Cursor AI
-.cursor/
-project-spec.md
-.cursorrules
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
-# Build
-build/
-dist/
-*.egg-info
 
-# Docker
-*.pid
-*.sock
+# ===================================================================
+#  操作系统特定文件 (macOS & Ubuntu/Linux)
+# ===================================================================
 
-# Jupyter
-.ipynb_checkpoints/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Trashes
+.Spotlight-V100
+._*
 
-# docs
-docs/
-
-# tests
-tests/
+# Linux
