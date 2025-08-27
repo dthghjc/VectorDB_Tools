@@ -1,18 +1,18 @@
 import os
 import time  # 1. 导入 time 模块
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from sqlalchemy import create_engine, text # 2. 导入 text 用于执行原生SQL
-
-load_dotenv()
-
+from app.core.config import settings
+# load_dotenv()
 # --- 数据库配置 ---
-USER = os.getenv("DB_USER")
-PASSWORD = os.getenv("DB_PASSWORD")
-HOST = os.getenv("DB_HOST")
-PORT = os.getenv("DB_PORT")
-DBNAME = os.getenv("DB_NAME")
+# USER = os.getenv("DB_USER")
+# PASSWORD = os.getenv("DB_PASSWORD")
+# HOST = os.getenv("DB_HOST")
+# PORT = os.getenv("DB_PORT")
+# DBNAME = os.getenv("DB_NAME")
 
-DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+# DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+DATABASE_URL = settings.DATABASE_URL
 
 engine = create_engine(DATABASE_URL)
 
