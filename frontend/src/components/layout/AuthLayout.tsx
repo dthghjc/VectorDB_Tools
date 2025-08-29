@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 
 export default function AuthLayout() {
   return (
@@ -8,6 +9,7 @@ export default function AuthLayout() {
       <div className="w-full max-w-4xl">
         <Outlet />
       </div>
+      <LanguageSwitcher />
     </main>
   );
 }

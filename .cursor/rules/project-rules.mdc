@@ -65,7 +65,7 @@ alwaysApply: true
 前端负责提供流畅的用户交互体验。
 
 - **UI 框架**: React (使用 Vite 构建)
-- **样式**: TailwindCSS + shadcn/ui
+- **样式**: TailwindCSS v4 + shadcn/ui
 - **状态管理**: Redux Toolkit (RTK)
     - 用于管理全局状态，如 Milvus 连接列表。
     - 特别适用于管理任务状态：当用户提交一个任务后，可以将任务列表存入 store，并定期（轮询）更新它们的状态。

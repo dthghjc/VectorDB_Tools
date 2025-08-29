@@ -1,0 +1,21 @@
+{
+    "loginForm": {
+      "title": "欢迎回来",
+      "description": "登录您的 VectorDB Tools 账户",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "forgotPassword": "忘记密码?",
+      "loginButton": "登录",
+      "continueWith": "或继续",
+      "noAccount": "还没有账户?",
+      "signUp": "注册",
+      "termsPrefix": "点击继续，即表示您同意我们的",
+      "termsOfService": "服务条款",
+      "termsAnd": "和",
+      "privacyPolicy": "隐私政策",
+      "loginWithApple": "使用 Apple 登录",
+      "loginWithGoogle": "使用 Google 登录",
+      "loginWithMeta": "使用 Meta 登录"
+    }
+  }
+  

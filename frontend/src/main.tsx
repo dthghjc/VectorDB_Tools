@@ -1,22 +1,19 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-// 1. 从 react-router-dom 导入 RouterProvider 组件
 import { RouterProvider } from 'react-router-dom';
-
-// 2. 导入您在 `src/router` 文件夹中创建并导出的 router 实例
-import { router } from './router'; // 确保这个路径指向您的 router/index.tsx
-
-// 3. 导入您的全局样式文件
+import { router } from './router';
 import './index.css';
 
-// 4. 获取 DOM 根节点并渲染应用
+import './i18n';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* 5. 在这里使用 RouterProvider!
-      这将启动您在 router/index.tsx 中定义的所有路由规则。
-      这是让所有路由和布局生效的最后一步，也是最关键的一步。
+    {/* 2. 使用 React Suspense 作为 fallback UI，
+        因为我们的翻译文件是从 /public 目录异步加载的。
+        在加载完成前，用户会看到 "loading..."。
     */}
-    <RouterProvider router={router} />
+    <Suspense fallback="loading...">
+      <RouterProvider router={router} />
+    </Suspense>
   </React.StrictMode>
 );
-

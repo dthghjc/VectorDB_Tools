@@ -1,0 +1,21 @@
+{
+    "loginForm": {
+      "title": "Welcome back",
+      "description": "Login to your VectorDB Tools account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot your password?",
+      "loginButton": "Login",
+      "continueWith": "Or continue with",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "termsPrefix": "By clicking continue, you agree to our ",
+      "termsOfService": "Terms of Service",
+      "termsAnd": " and ",
+      "privacyPolicy": "Privacy Policy",
+      "loginWithApple": "Login with Apple",
+      "loginWithGoogle": "Login with Google",
+      "loginWithMeta": "Login with Meta"
+    }
+  }
+  
