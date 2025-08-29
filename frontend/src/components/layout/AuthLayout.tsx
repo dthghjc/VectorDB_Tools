@@ -6,9 +6,9 @@ export default function AuthLayout() {
   return (
     <div className="relative flex min-h-screen flex-col">
       {/* 右上角工具栏 */}
-      <div className="absolute right-4 top-4 z-10 flex items-center space-x-2">
-        <ThemeToggle />
+      <div className="absolute right-4 top-4 z-10 flex items-center space-x-1">
         <LanguageSwitcher />
+        <ThemeToggle />
       </div>
       
       {/* 主要内容区域 */}

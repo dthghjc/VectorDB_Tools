@@ -1,27 +1,37 @@
 import { useTranslation } from "react-i18next";
+import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+  const toggleLanguage = () => {
+    const currentLang = i18n.language;
+    const newLang = currentLang === 'zh' ? 'en' : 'zh';
+    i18n.changeLanguage(newLang);
+  };
+
+
+
+  const getCurrentLabel = () => {
+    return i18n.language === 'zh' ? 'ZH' : 'EN';
+  };
+
+  const getTooltip = () => {
+    return i18n.language === 'zh' ? '切换到英文' : 'Switch to Chinese';
   };
 
   return (
-    <div className="fixed bottom-4 right-4 flex gap-2">
-      <Button
-        variant={i18n.language === 'en' ? 'default' : 'outline'}
-        onClick={() => changeLanguage('en')}
-      >
-        EN
-      </Button>
-      <Button
-        variant={i18n.language === 'zh' ? 'default' : 'outline'}
-        onClick={() => changeLanguage('zh')}
-      >
-        中文
-      </Button>
-    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggleLanguage}
+      title={getTooltip()}
+      className="h-9 w-auto px-2 gap-1"
+    >
+      <Languages className="h-3 w-3" />
+      <span className="text-xs font-medium">{getCurrentLabel()}</span>
+      <span className="sr-only">{getTooltip()}</span>
+    </Button>
   );
 }
