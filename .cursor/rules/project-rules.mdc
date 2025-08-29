@@ -60,7 +60,7 @@ alwaysApply: true
     - **Redis**: 作为 Celery 的 Broker (消息中间件) 和 Result Backend (结果存储)。它轻量、快速，非常适合这个场景。
 - **数据验证**: Pydantic
 
-### 三、 前端架构 (Vite + React)
+### 三、 前端架构 (Vite + React 19)
 
 前端负责提供流畅的用户交互体验。
 
