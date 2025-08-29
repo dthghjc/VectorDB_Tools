@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 export default function AppLayout() {
   return (
@@ -9,6 +10,7 @@ export default function AppLayout() {
           {/* 这是一个伸缩容器，它会占据所有可用空间 */}
           <div className="flex flex-1 items-center justify-end space-x-4">
             <nav className="flex items-center space-x-1">
+              <ThemeToggle />
             </nav>
           </div>
         </div>
