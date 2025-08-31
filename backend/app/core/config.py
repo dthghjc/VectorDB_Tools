@@ -1,5 +1,7 @@
+import secrets
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import computed_field
+from pydantic import computed_field, Field
 
 class Settings(BaseSettings):
     """
@@ -28,9 +30,10 @@ class Settings(BaseSettings):
             f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode=require"
         )
     
-    # 你可以在这里添加其他应用配置，例如...
-    # SECRET_KEY: str
-    # ALGORITHM: str = "HS256"
+    # JWT 配置
+    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))  # 环境变量优先，否则自动生成
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24小时 = 1440分钟
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

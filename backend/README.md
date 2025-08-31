@@ -80,7 +80,7 @@ uv pip sync
 * `uv venv`: 准备一块“空地基” (`.venv`)。
 * `uv add`: **功能驱动**。向“蓝图”中添加新工具，并被动更新“施工计划书” (`uv.lock`)。
 * `uv pip compile`: **维护驱动**。主动重新规划，生成一份最新的“施工计划书” (`uv.lock`)。
-* `uv pip sync`: **执行驱动**。严格按照“施工计划书” (`uv.lock`) 来建造或改造“施工现场” (`.venv`)。
+* `uv pip sync pyproject.toml`: **执行驱动**。严格按照“施工计划书” (`uv.lock`) 来建造或改造“施工现场” (`.venv`)。
 * `uv run`: **运行驱动**。在“施工现场” (`.venv`) 中安全地运行程序。
 
 ### 附录：uv pip sync pyproject.toml 的使用
