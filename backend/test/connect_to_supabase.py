@@ -1,4 +1,8 @@
 import os
+import sys
+# 将项目根目录 (即当前文件的上级目录) 添加到 sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import time  # 1. 导入 time 模块
 # from dotenv import load_dotenv
 from sqlalchemy import create_engine, text # 2. 导入 text 用于执行原生SQL

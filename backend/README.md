@@ -22,14 +22,14 @@ uv init
 ```bash
 # 首先，你可以通过 `uv python list` 查看 uv 在你系统上发现了哪些可用的 Python 版本。
 # 然后，在创建环境时通过 `-p` 或 `--python` 参数指定版本：
-uv venv -p 3.11
+uv venv -p 3.10
 ```
 此命令将在当前目录下创建一个 `.venv` 文件夹，作为我们项目的隔离环境。
 
 **步骤 1.3: 安装所有依赖**
 此命令会读取 `pyproject.toml` 和 `uv.lock` 文件，并将所有锁定的依赖精确地安装到你刚刚创建的 `.venv` 中。
 ```bash
-uv pip sync
+uv pip sync pyproject.toml
 ```
 至此，你的本地开发环境已配置完毕，并与团队标准完全一致。
 
