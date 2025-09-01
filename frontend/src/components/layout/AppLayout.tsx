@@ -1,27 +1,38 @@
 import { Outlet } from "react-router-dom";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
+import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function AppLayout() {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* 2. 创建一个页眉 (Header) 作为顶部导航栏 */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          {/* 这是一个伸缩容器，它会占据所有可用空间 */}
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <nav className="flex items-center space-x-1">
-              <LanguageSwitcher />
-              <ThemeToggle />
-            </nav>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        {/* 创建一个页眉 (Header) 作为顶部导航栏 */}
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            {/* 分隔线 */}
+            <div className="h-4 w-px bg-sidebar-border" />
           </div>
-        </div>
-      </header>
+          
+          {/* 右侧工具栏 */}
+          <div className="ml-auto flex items-center gap-2 px-4">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
+        </header>
 
-      {/* 页面主要内容区域 */}
-      <main className="flex-1 p-4">
-        <Outlet />
-      </main>
-    </div>
+        {/* 页面主要内容区域 */}
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
