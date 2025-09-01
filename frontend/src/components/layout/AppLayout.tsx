@@ -30,7 +30,16 @@ export default function AppLayout() {
 
         {/* 页面主要内容区域 */}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Outlet />
+          {/* <Outlet /> */}
+          {/* --- 添加下面的测试代码 --- */}
+          <div>
+            <h1 className="text-xl font-bold">滚动测试</h1>
+            <p>如果布局正确，只有这部分内容会滚动，侧边栏和顶部栏应该固定不动。</p>
+            {Array.from({ length: 100 }).map((_, i) => (
+              <p key={i}>滚动项 {i + 1}</p>
+            ))}
+          </div>
+          {/* --- 测试代码结束 --- */}
         </div>
       </SidebarInset>
     </SidebarProvider>

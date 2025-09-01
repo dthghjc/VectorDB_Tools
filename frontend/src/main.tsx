@@ -1,3 +1,4 @@
+// src/main.tsx
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
