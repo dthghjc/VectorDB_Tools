@@ -16,6 +16,30 @@
       "loginWithApple": "使用 Apple 登录",
       "loginWithGoogle": "使用 Google 登录",
       "loginWithMeta": "使用 Meta 登录"
+    },
+    "signupForm": {
+      "title": "创建账户",
+      "description": "注册您的 VectorDB Tools 账户",
+      "fullNameLabel": "姓名",
+      "fullNamePlaceholder": "请输入您的姓名",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "passwordHint": "请设置一个安全的密码",
+      "signUpButton": "注册",
+      "signingUp": "注册中...",
+      "continueWith": "或继续",
+      "haveAccount": "已经有账户?",
+      "login": "登录",
+      "termsPrefix": "点击注册，即表示您同意我们的",
+      "termsOfService": "服务条款",
+      "termsAnd": "和",
+      "privacyPolicy": "隐私政策",
+      "signUpWithApple": "使用 Apple 注册",
+      "signUpWithGoogle": "使用 Google 注册",
+      "signUpWithMeta": "使用 Meta 注册",
+      "successTitle": "注册成功！",
+      "successDescription": "您的账户已创建，但需要管理员审核激活。我们会尽快处理您的申请。",
+      "backToLogin": "返回登录"
     }
   }
   

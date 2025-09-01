@@ -16,6 +16,30 @@
       "loginWithApple": "Login with Apple",
       "loginWithGoogle": "Login with Google",
       "loginWithMeta": "Login with Meta"
+    },
+    "signupForm": {
+      "title": "Create an account",
+      "description": "Sign up for your VectorDB Tools account",
+      "fullNameLabel": "Full Name",
+      "fullNamePlaceholder": "Enter your full name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordHint": "Choose a secure password",
+      "signUpButton": "Sign up",
+      "signingUp": "Signing up...",
+      "continueWith": "Or continue with",
+      "haveAccount": "Already have an account?",
+      "login": "Login",
+      "termsPrefix": "By clicking sign up, you agree to our ",
+      "termsOfService": "Terms of Service",
+      "termsAnd": " and ",
+      "privacyPolicy": "Privacy Policy",
+      "signUpWithApple": "Sign up with Apple",
+      "signUpWithGoogle": "Sign up with Google",
+      "signUpWithMeta": "Sign up with Meta",
+      "successTitle": "Registration Successful!",
+      "successDescription": "Your account has been created and is pending admin approval. We'll review your application soon.",
+      "backToLogin": "Back to Login"
     }
   }
   

@@ -7,6 +7,7 @@ import AuthLayout from '@/components/layout/AuthLayout';
 // 2. 导入您的所有页面组件
 import HomePage from '@/pages/home';
 import LoginPage from '@/pages/auth/LoginPage';
+import SignupPage from '@/pages/auth/SignupPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 // 3. 导入您的路由守卫
@@ -37,6 +38,11 @@ export const router = createBrowserRouter(
           path: '/login',
           // element: <RequireAuth allowed={false} redirectTo="/"><LoginPage /></RequireAuth>,
           element: <LoginPage />,
+        },
+        {
+          path: '/signup',
+          // element: <RequireAuth allowed={false} redirectTo="/"><SignupPage /></RequireAuth>,
+          element: <SignupPage />,
         },
         // ...未来所有认证相关的页面都放在这里
       ],

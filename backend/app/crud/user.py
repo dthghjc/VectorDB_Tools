@@ -43,7 +43,7 @@ def create_user(db: Session, user: UserCreate) -> User:
         email=user.email,
         full_name=user.full_name,
         hashed_password=hashed_password,
-        is_active=True  # 新用户默认激活，不允许用户控制
+        is_active=False  # 新用户默认非激活状态，需要管理员审核
     )
     
     # 保存到数据库
