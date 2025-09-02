@@ -1,4 +1,5 @@
-import { useEffect, ReactNode } from 'react';
+import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setAuthFromStorage, validateToken, getCurrentUser } from '@/store/slices/authSlice';

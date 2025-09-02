@@ -1,4 +1,5 @@
-import { useEffect, ReactNode, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setAuthFromStorage, validateToken, logoutUser } from '@/store/slices/authSlice';
