@@ -1,17 +1,36 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy } from 'react';
 
-// 1. 导入您的两种布局组件
+// 1. 导入您的两种布局组件（布局组件保持同步导入，因为它们是必需的）
 import AppLayout from '@/components/layout/AppLayout';
 import AuthLayout from '@/components/layout/AuthLayout';
 
-// 2. 导入您的所有页面组件
-import HomePage from '@/pages/home';
-import LoginPage from '@/pages/auth/LoginPage';
-import SignupPage from '@/pages/auth/SignupPage';
-import NotFoundPage from '@/pages/NotFoundPage';
+// 2. 懒加载页面组件
+const HomePage = lazy(() => import('@/pages/home'));
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const SignupPage = lazy(() => import('@/pages/auth/SignupPage'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
-// 3. 导入您的路由守卫
-import RequireAuth from '@/utils/RequireAuth';
+// 配置中心页面（懒加载）
+const ConfigPage = lazy(() => import('@/pages/config'));
+const MilvusConfigPage = lazy(() => import('@/pages/config/milvus'));
+const ApiKeysPage = lazy(() => import('@/pages/config/api-keys'));
+
+// Schema 管理页面（懒加载）
+const SchemaPage = lazy(() => import('@/pages/schema'));
+const CreateSchemaPage = lazy(() => import('@/pages/schema/create'));
+
+// 数据导入页面（懒加载）
+const DataImportPage = lazy(() => import('@/pages/data-import'));
+
+// 任务中心页面（懒加载）
+const TasksPage = lazy(() => import('@/pages/tasks'));
+
+// 检索评估页面（懒加载）
+const SearchEvalPage = lazy(() => import('@/pages/search-eval'));
+
+// 3. 导入您的路由守卫（暂时注释，未来可能使用）
+// import RequireAuth from '@/utils/RequireAuth';
 
 export const router = createBrowserRouter(
   [
@@ -24,6 +43,43 @@ export const router = createBrowserRouter(
           path: '/',
           // element: <RequireAuth allowed={true} redirectTo="/login"><HomePage /></RequireAuth>,
           element: <HomePage />,
+        },
+        // 配置中心路由
+        {
+          path: '/config',
+          element: <ConfigPage />,
+        },
+        {
+          path: '/config/milvus',
+          element: <MilvusConfigPage />,
+        },
+        {
+          path: '/config/api-keys',
+          element: <ApiKeysPage />,
+        },
+        // Schema 管理路由
+        {
+          path: '/schema',
+          element: <SchemaPage />,
+        },
+        {
+          path: '/schema/create',
+          element: <CreateSchemaPage />,
+        },
+        // 数据导入路由
+        {
+          path: '/data-import',
+          element: <DataImportPage />,
+        },
+        // 任务中心路由
+        {
+          path: '/tasks',
+          element: <TasksPage />,
+        },
+        // 检索评估路由
+        {
+          path: '/search-eval',
+          element: <SearchEvalPage />,
         },
         // ...未来所有需要登录的页面都放在这里
       ],

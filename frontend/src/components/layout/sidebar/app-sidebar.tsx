@@ -30,93 +30,92 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin",
+    email: "admin@vectordb.tools",
+    avatar: "/avatars/admin.jpg",
   },
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "配置中心",
+      url: "/config",
+      icon: Settings2,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Milvus 连接",
+          url: "/config/milvus",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "API 密钥",
+          url: "/config/api-keys",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
+      title: "Schema 管理",
+      url: "/schema",
       icon: BookOpen,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "创建 Schema",
+          url: "/schema/create",
         },
         {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "模板库",
+          url: "/schema/templates",
         },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      title: "数据导入",
+      url: "/data-import",
+      icon: Bot,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "上传文件",
+          url: "/data-import/upload",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "向量化",
+          url: "/data-import/vectorize",
         },
         {
-          title: "Billing",
-          url: "#",
+          title: "加载数据",
+          url: "/data-import/load",
+        },
+      ],
+    },
+    {
+      title: "任务中心",
+      url: "/tasks",
+      icon: SquareTerminal,
+      items: [
+        {
+          title: "任务列表",
+          url: "/tasks/list",
         },
         {
-          title: "Limits",
-          url: "#",
+          title: "执行历史",
+          url: "/tasks/history",
+        },
+      ],
+    },
+    {
+      title: "检索评估",
+      url: "/search-eval",
+      icon: PieChart,
+      items: [
+        {
+          title: "测试集管理",
+          url: "/search-eval/testsets",
+        },
+        {
+          title: "批量检索",
+          url: "/search-eval/batch",
+        },
+        {
+          title: "结果分析",
+          url: "/search-eval/results",
         },
       ],
     },
@@ -164,8 +163,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">VectorDB Tools</span>
+                  <span className="truncate text-xs">数据处理平台</span>
                 </div>
               </a>
             </SidebarMenuButton>
