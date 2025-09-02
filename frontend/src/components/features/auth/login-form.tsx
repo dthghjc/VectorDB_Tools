@@ -1,20 +1,54 @@
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { loginUser, clearError } from "@/store/slices/authSlice"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const { isLoading, error, isAuthenticated } = useAppSelector(state => state.auth)
+  
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  // 清除错误信息当组件重新挂载
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
+
+  // 如果已登录，重定向到主页
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      console.log('Email or password is empty:', { email, password })
+      return
+    }
+    
+    console.log('Submitting login:', { email, password: '***' })
+    dispatch(loginUser({ email, password }))
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">{t('loginForm.title')}</h1>
@@ -22,13 +56,24 @@ export function LoginForm({
                   {t('loginForm.description')}
                 </p>
               </div>
+              
+              {/* 错误提示 */}
+              {error && (
+                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 border border-red-200">
+                  {error}
+                </div>
+              )}
+              
               <div className="grid gap-3">
                 <Label htmlFor="email">{t('loginForm.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-3">
@@ -41,10 +86,24 @@ export function LoginForm({
                     {t('loginForm.forgotPassword')}
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                  disabled={isLoading}
+                />
               </div>
-              <Button type="submit" className="w-full">
-                {t('loginForm.loginButton')}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {t('loginForm.logging')}
+                  </>
+                ) : (
+                  t('loginForm.loginButton')
+                )}
               </Button>
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                 <span className="bg-card text-muted-foreground relative z-10 px-2">

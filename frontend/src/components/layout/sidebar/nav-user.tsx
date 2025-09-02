@@ -2,10 +2,11 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
-  Sparkles,
+  User,
 } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { logoutUser } from "@/store/slices/authSlice"
 
 import {
   Avatar,
@@ -28,16 +29,27 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar()
+  const dispatch = useAppDispatch()
+  const { user } = useAppSelector(state => state.auth)
+
+  // 如果用户未登录，不显示用户菜单
+  if (!user) {
+    return null
+  }
+
+  const handleLogout = () => {
+    dispatch(logoutUser())
+  }
+
+  // 生成用户头像的初始字母
+  const getInitials = (email: string, username?: string) => {
+    if (username) {
+      return username.slice(0, 2).toUpperCase()
+    }
+    return email.slice(0, 2).toUpperCase()
+  }
 
   return (
     <SidebarMenu>
@@ -49,11 +61,13 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage src="" alt={user.username || user.email} />
+                <AvatarFallback className="rounded-lg">
+                  {getInitials(user.email, user.username)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">{user.username || user.email}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -68,11 +82,13 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src="" alt={user.username || user.email} />
+                  <AvatarFallback className="rounded-lg">
+                    {getInitials(user.email, user.username)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate font-medium">{user.username || user.email}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>
@@ -80,29 +96,22 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+                <User />
+                个人资料
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
+                账户设置
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
-                Notifications
+                通知设置
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              Log out
+              退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

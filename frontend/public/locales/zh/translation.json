@@ -6,6 +6,7 @@
       "passwordLabel": "密码",
       "forgotPassword": "忘记密码?",
       "loginButton": "登录",
+      "logging": "登录中...",
       "continueWith": "或继续",
       "noAccount": "还没有账户?",
       "signUp": "注册",

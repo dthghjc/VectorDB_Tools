@@ -29,8 +29,8 @@ const TasksPage = lazy(() => import('@/pages/tasks'));
 // 检索评估页面（懒加载）
 const SearchEvalPage = lazy(() => import('@/pages/search-eval'));
 
-// 3. 导入您的路由守卫（暂时注释，未来可能使用）
-// import RequireAuth from '@/utils/RequireAuth';
+// 3. 导入路由守卫组件
+import RequireAuth from '@/components/auth/RequireAuth';
 
 export const router = createBrowserRouter(
   [
@@ -41,45 +41,44 @@ export const router = createBrowserRouter(
       children: [
         {
           path: '/',
-          // element: <RequireAuth allowed={true} redirectTo="/login"><HomePage /></RequireAuth>,
-          element: <HomePage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><HomePage /></RequireAuth>,
         },
         // 配置中心路由
         {
           path: '/config',
-          element: <ConfigPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><ConfigPage /></RequireAuth>,
         },
         {
           path: '/config/milvus',
-          element: <MilvusConfigPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><MilvusConfigPage /></RequireAuth>,
         },
         {
           path: '/config/api-keys',
-          element: <ApiKeysPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><ApiKeysPage /></RequireAuth>,
         },
         // Schema 管理路由
         {
           path: '/schema',
-          element: <SchemaPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><SchemaPage /></RequireAuth>,
         },
         {
           path: '/schema/create',
-          element: <CreateSchemaPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><CreateSchemaPage /></RequireAuth>,
         },
         // 数据导入路由
         {
           path: '/data-import',
-          element: <DataImportPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><DataImportPage /></RequireAuth>,
         },
         // 任务中心路由
         {
           path: '/tasks',
-          element: <TasksPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><TasksPage /></RequireAuth>,
         },
         // 检索评估路由
         {
           path: '/search-eval',
-          element: <SearchEvalPage />,
+          element: <RequireAuth allowed={true} redirectTo="/login"><SearchEvalPage /></RequireAuth>,
         },
         // ...未来所有需要登录的页面都放在这里
       ],
@@ -92,13 +91,11 @@ export const router = createBrowserRouter(
       children: [
         {
           path: '/login',
-          // element: <RequireAuth allowed={false} redirectTo="/"><LoginPage /></RequireAuth>,
-          element: <LoginPage />,
+          element: <RequireAuth allowed={false} redirectTo="/"><LoginPage /></RequireAuth>,
         },
         {
           path: '/signup',
-          // element: <RequireAuth allowed={false} redirectTo="/"><SignupPage /></RequireAuth>,
-          element: <SignupPage />,
+          element: <RequireAuth allowed={false} redirectTo="/"><SignupPage /></RequireAuth>,
         },
         // ...未来所有认证相关的页面都放在这里
       ],

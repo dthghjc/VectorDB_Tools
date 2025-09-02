@@ -71,7 +71,7 @@ Authorization: Bearer jwt_token_here
 
 ```bash
 cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8009
 ```
 
 访问 API 文档：http://localhost:8000/docs
