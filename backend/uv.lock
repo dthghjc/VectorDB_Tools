@@ -155,6 +155,7 @@ dependencies = [
     { name = "celery" },
     { name = "email-validator" },
     { name = "fastapi" },
+    { name = "fastapi-static-digest" },
     { name = "fastapi-users", extra = ["sqlalchemy"] },
     { name = "openai" },
     { name = "pandas" },
@@ -175,6 +176,7 @@ requires-dist = [
     { name = "celery", specifier = ">=5.5.3" },
     { name = "email-validator", specifier = ">=2.2.0" },
     { name = "fastapi", specifier = ">=0.116.1" },
+    { name = "fastapi-static-digest", specifier = ">=1.1.0" },
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=14.0.1" },
     { name = "openai", specifier = ">=1.102.0" },
     { name = "pandas", specifier = ">=2.3.2" },
@@ -513,6 +515,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/78/d7/6c8b3bfe33eeffa208183ec037fee0cce9f7f024089ab1c5d12ef04bd27c/fastapi-0.116.1.tar.gz", hash = "sha256:ed52cbf946abfd70c5a0dccb24673f0670deeb517a88b3544d03c2a6bf283143", size = 296485, upload-time = "2025-07-11T16:22:32.057Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/47/d63c60f59a59467fda0f93f46335c9d18526d7071f025cb5b89d5353ea42/fastapi-0.116.1-py3-none-any.whl", hash = "sha256:c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565", size = 95631, upload-time = "2025-07-11T16:22:30.485Z" },
+]
+
+[[package]]
+name = "fastapi-static-digest"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "starlette" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5f/f1/6a9ef65b30a0f83aa1d144c704116f9e9ea045aeef02d40249199ff67924/fastapi-static-digest-1.1.0.tar.gz", hash = "sha256:35ed3fc8fa8e584dd64bdff48bc8044d8bf217d254f240ff813fd5e3636bafb7", size = 5141, upload-time = "2021-10-09T23:55:22.892Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/94/0a64fcc042af4428c8fdc29cb3ef943e3ff893d856c0cf2939fa99d90e81/fastapi_static_digest-1.1.0-py3-none-any.whl", hash = "sha256:e914148bfca39b5bad8d784ffd50037a2b7be577d5630dbb378ff59ab5ec3c2c", size = 6375, upload-time = "2021-10-09T23:55:21.503Z" },
 ]
 
 [[package]]

@@ -9,6 +9,7 @@ dependencies = [
     "celery>=5.5.3",
     "email-validator>=2.2.0",
     "fastapi>=0.116.1",
+    "fastapi-static-digest>=1.1.0",
     "fastapi-users[sqlalchemy]>=14.0.1",
     "openai>=1.102.0",
     "pandas>=2.3.2",

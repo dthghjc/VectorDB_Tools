@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.api.v1.router import api_router
 
@@ -7,7 +8,10 @@ from app.api.v1.router import api_router
 app = FastAPI(
     title="VectorDB Tools API",
     description="A comprehensive tool for managing vector databases and data processing workflows",
-    version="1.0.0"
+    version="1.0.0",
+    # 禁用默认的 docs，我们将创建自定义的
+    docs_url=None,
+    redoc_url=None
 )
 
 # 配置 CORS
@@ -21,6 +25,40 @@ app.add_middleware(
 
 # 包含 API 路由
 app.include_router(api_router, prefix="/api/v1")
+
+
+@app.get("/docs", response_class=HTMLResponse)
+async def custom_swagger_ui_html():
+    """自定义 Swagger UI，使用国内可访问的 CDN"""
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link type="text/css" rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+        <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+        <title>VectorDB Tools API - Swagger UI</title>
+    </head>
+    <body>
+        <div id="swagger-ui">
+        </div>
+        <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+        <script>
+        const ui = SwaggerUIBundle({
+            url: '/openapi.json',
+            dom_id: "#swagger-ui",
+            layout: "BaseLayout",
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true,
+            syntaxHighlight: {
+                theme: "obsidian"
+            },
+            tryItOutEnabled: true,
+        })
+        </script>
+    </body>
+    </html>
+    """, status_code=200)
 
 
 @app.get("/")
