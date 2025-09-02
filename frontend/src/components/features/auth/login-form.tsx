@@ -1,51 +1,51 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { loginUser, clearError } from "@/store/slices/authSlice"
+
+// 登录表单数据类型
+export interface LoginFormData {
+  email: string
+  password: string
+}
+
+// 登录表单Props接口
+export interface LoginFormProps {
+  onSubmit: (data: LoginFormData) => void
+  error?: string | null
+  loading?: boolean
+  className?: string
+}
 
 export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+  onSubmit,
+  error,
+  loading = false,
+  className
+}: LoginFormProps) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const dispatch = useAppDispatch()
-  const { isLoading, error, isAuthenticated } = useAppSelector(state => state.auth)
   
+  // 本地表单状态
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  // 清除错误信息当组件重新挂载
-  useEffect(() => {
-    dispatch(clearError())
-  }, [dispatch])
-
-  // 如果已登录，重定向到主页
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/', { replace: true })
-    }
-  }, [isAuthenticated, navigate])
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 基础表单验证
     if (!email || !password) {
-      console.log('Email or password is empty:', { email, password })
       return
     }
     
-    console.log('Submitting login:', { email, password: '***' })
-    dispatch(loginUser({ email, password }))
+    // 触发回调，传递表单数据
+    onSubmit({ email, password })
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
@@ -73,7 +73,7 @@ export function LoginForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={loading}
                 />
               </div>
               <div className="grid gap-3">
@@ -92,11 +92,11 @@ export function LoginForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required 
-                  disabled={isLoading}
+                  disabled={loading}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     {t('loginForm.logging')}

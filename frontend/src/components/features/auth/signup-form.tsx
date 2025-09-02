@@ -6,66 +6,46 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-
-interface SignupFormData {
+// 注册表单数据类型
+export interface SignupFormData {
   email: string
   password: string
-  full_name: string
+  username: string
+}
+
+// 注册表单Props接口
+export interface SignupFormProps {
+  onSubmit: (data: SignupFormData) => void
+  error?: string | null
+  loading?: boolean
+  success?: boolean
+  className?: string
 }
 
 export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+  onSubmit,
+  error,
+  loading = false,
+  success = false,
+  className
+}: SignupFormProps) {
   const { t } = useTranslation()
   const [formData, setFormData] = useState<SignupFormData>({
     email: "",
     password: "",
-    full_name: ""
+    username: ""
   })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch("/api/v1/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        // 尝试解析错误响应
-        let errorMessage = "Registration failed"
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.detail || errorMessage
-        } catch {
-          // 如果无法解析JSON，使用状态码和状态文本
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`
-        }
-        throw new Error(errorMessage)
-      }
-
-      // 成功响应
-      await response.json() // 解析成功响应
-      setSuccess(true)
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError("Network error: Unable to connect to server")
-      }
-    } finally {
-      setIsLoading(false)
+    
+    // 基础表单验证
+    if (!formData.email || !formData.password || !formData.username) {
+      return
     }
+    
+    // 触发回调，传递表单数据
+    onSubmit(formData)
   }
 
   const handleInputChange = (field: keyof SignupFormData) => (
@@ -79,7 +59,7 @@ export function SignupForm({
 
   if (success) {
     return (
-      <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <div className={cn("flex flex-col gap-6", className)}>
         <Card className="overflow-hidden p-0">
           <CardContent className="grid p-0 md:grid-cols-2">
             <div className="p-6 md:p-8">
@@ -111,7 +91,7 @@ export function SignupForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
@@ -130,13 +110,15 @@ export function SignupForm({
               )}
 
               <div className="grid gap-3">
-                <Label htmlFor="full_name">{t('signupForm.fullNameLabel')}</Label>
+                <Label htmlFor="username">{t('signupForm.fullNameLabel')}</Label>
                 <Input
-                  id="full_name"
+                  id="username"
                   type="text"
                   placeholder={t('signupForm.fullNamePlaceholder')}
-                  value={formData.full_name}
-                  onChange={handleInputChange('full_name')}
+                  value={formData.username}
+                  onChange={handleInputChange('username')}
+                  disabled={loading}
+                  required
                 />
               </div>
 
@@ -148,6 +130,7 @@ export function SignupForm({
                   placeholder="m@example.com"
                   value={formData.email}
                   onChange={handleInputChange('email')}
+                  disabled={loading}
                   required
                 />
               </div>
@@ -159,6 +142,7 @@ export function SignupForm({
                   type="password" 
                   value={formData.password}
                   onChange={handleInputChange('password')}
+                  disabled={loading}
                   required 
                 />
                 <p className="text-xs text-muted-foreground">
@@ -166,8 +150,15 @@ export function SignupForm({
                 </p>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t('signupForm.signingUp') : t('signupForm.signUpButton')}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {t('signupForm.signingUp')}
+                  </>
+                ) : (
+                  t('signupForm.signUpButton')
+                )}
               </Button>
 
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">

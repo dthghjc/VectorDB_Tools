@@ -25,6 +25,12 @@ interface LoginCredentials {
   password: string;
 }
 
+interface RegisterCredentials {
+  email: string;
+  username: string;
+  password: string;
+}
+
 interface TokenPayload {
   sub: string; // email
   user_id: string;
@@ -54,6 +60,23 @@ export const loginUser = createAsyncThunk(
       console.error('Auth slice: login failed:', error.response?.data || error.message);
       return rejectWithValue(
         error.response?.data?.detail || 'Login failed'
+      );
+    }
+  }
+);
+
+export const registerUser = createAsyncThunk(
+  'auth/registerUser',
+  async (credentials: RegisterCredentials, { rejectWithValue }) => {
+    try {
+      console.log('Auth slice: attempting register with:', credentials.email);
+      const response = await authService.register(credentials);
+      console.log('Auth slice: register successful:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Auth slice: register failed:', error.response?.data || error.message);
+      return rejectWithValue(
+        error.response?.data?.detail || 'Registration failed'
       );
     }
   }
@@ -174,6 +197,21 @@ const authSlice = createSlice({
         state.token = null;
         state.user = null;
         localStorage.removeItem('access_token');
+      })
+      // Register
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.error = null;
+        // 注册成功但不自动登录，需要管理员审核
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       })
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
