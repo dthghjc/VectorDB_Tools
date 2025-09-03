@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 import { authService } from '@/services/api/auth';
+import { ErrorHandler } from '@/utils/errorHandler';
 
 // ============================
 // 类型定义 (Type Definitions)
@@ -191,10 +192,8 @@ export const loginUser = createAsyncThunk(
         error: error.response?.data || error.message
       });
       
-      // 提取具体的错误信息
-      const errorMessage = error.response?.data?.detail 
-        || error.response?.data?.message 
-        || '登录失败，请检查邮箱和密码';
+      // 使用错误处理工具获取国际化错误信息
+      const errorMessage = ErrorHandler.getLoginError(error);
       
       return rejectWithValue(errorMessage);
     }
@@ -226,10 +225,8 @@ export const registerUser = createAsyncThunk(
         error: error.response?.data || error.message
       });
       
-      // 提取具体的错误信息
-      const errorMessage = error.response?.data?.detail 
-        || error.response?.data?.message 
-        || '注册失败，请检查输入信息';
+      // 使用错误处理工具获取国际化错误信息
+      const errorMessage = ErrorHandler.getRegisterError(error);
       
       return rejectWithValue(errorMessage);
     }
