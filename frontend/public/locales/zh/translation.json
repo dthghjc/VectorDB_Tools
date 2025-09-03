@@ -53,6 +53,22 @@
     "title": "页面未找到",
     "description": "抱歉，我们无法找到您正在寻找的页面。它可能已被移动或删除。",
     "backHome": "返回首页"
+  },
+  "addApiKeyDialog": {
+    "title": "添加新 API 密钥",
+    "description": "输入您的模型密钥信息。密钥将被安全传输和存储。",
+    "nameLabel": "名称",
+    "namePlaceholder": "例如：我的项目 A-Key",
+    "providerLabel": "供应商", 
+    "providerPlaceholder": "例如：OpenAI",
+    "apiKeyLabel": "API 密钥",
+    "apiKeyPlaceholder": "例如：sk-proj-****...****abcd",
+    "baseUrlLabel": "Base URL",
+    "baseUrlPlaceholder": "例如：https://api.openai.com/v1",
+    "addButton": "添加密钥",
+    "saveButton": "保存密钥",
+    "saving": "保存中...",
+    "saveError": "保存失败，请稍后重试"
   }
 }
   

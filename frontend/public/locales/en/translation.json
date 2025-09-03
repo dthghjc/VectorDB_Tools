@@ -53,6 +53,22 @@
     "title": "Page Not Found",
     "description": "Sorry, we couldn't find the page you're looking for. It may have been moved or deleted.",
     "backHome": "Back to Home"
+  },
+  "addApiKeyDialog": {
+    "title": "Add New API Key",
+    "description": "Enter your model API key information. Keys will be securely transmitted and stored.",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g., My Project A-Key",
+    "providerLabel": "Provider",
+    "providerPlaceholder": "e.g., OpenAI",
+    "apiKeyLabel": "API Key",
+    "apiKeyPlaceholder": "e.g., sk-proj-****...****abcd",
+    "baseUrlLabel": "Base URL",
+    "baseUrlPlaceholder": "e.g., https://api.openai.com/v1",
+    "addButton": "Add Key",
+    "saveButton": "Save Key",
+    "saving": "Saving...",
+    "saveError": "Save failed, please try again later"
   }
 }
   

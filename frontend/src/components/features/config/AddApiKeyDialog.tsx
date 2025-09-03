@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,8 @@ interface AddApiKeyDialogProps {
 }
 
 export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
+  const { t } = useTranslation();
+  
   // --- 状态管理 ---
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
@@ -70,7 +73,7 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
       setIsOpen(false);
       onSuccess();
     } catch (err) {
-      setError("保存失败，请稍后重试");
+      setError(t('addApiKeyDialog.saveError'));
       setIsLoading(false);
     }
   };
@@ -80,41 +83,41 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
-          添加密钥
+          {t('addApiKeyDialog.addButton')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>添加新 API 密钥</DialogTitle>
+          <DialogTitle>{t('addApiKeyDialog.title')}</DialogTitle>
           <DialogDescription>
-            输入您的模型密钥信息。密钥将被安全传输和存储。
+            {t('addApiKeyDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              名称
+              {t('addApiKeyDialog.nameLabel')}
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例如：我的项目 A-Key"
+              placeholder={t('addApiKeyDialog.namePlaceholder')}
               className="col-span-3"
-              required  // 表示必填项
+              required
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="模型供应商" className="text-right">
-              模型供应商
+            <Label htmlFor="provider" className="text-right">
+              {t('addApiKeyDialog.providerLabel')}
             </Label>
             <Input
               id="provider"
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
-              placeholder="例如：OpenAI"
+              placeholder={t('addApiKeyDialog.providerPlaceholder')}
               className="col-span-3"
               required
             />
@@ -122,13 +125,13 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="apiKey" className="text-right">
-              API 密钥
+              {t('addApiKeyDialog.apiKeyLabel')}
             </Label>
             <Input
               id="apiKey"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="例如：sk-proj-****...****abcd"
+              placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
               className="col-span-3"
               required
             />
@@ -136,13 +139,13 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="baseUrl" className="text-right">
-              Base URL
+              {t('addApiKeyDialog.baseUrlLabel')}
             </Label>
             <Input
               id="baseUrl"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="例如：https://api.openai.com/v1"
+              placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
               className="col-span-3"
               required
             />
@@ -160,10 +163,10 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
             {isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                保存中...
+                {t('addApiKeyDialog.saving')}
               </>
             ) : (
-              "保存密钥"
+              t('addApiKeyDialog.saveButton')
             )}
           </Button>
         </DialogFooter>
