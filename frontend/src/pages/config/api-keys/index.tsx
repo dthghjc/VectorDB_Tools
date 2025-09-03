@@ -6,16 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Key, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
+import AddApiKeyDialog from "@/components/features/config/AddApiKeyDialog";
 
 // 模拟的 API 密钥数据
 const mockApiKeys = [
@@ -48,6 +39,11 @@ export default function ApiKeysPage() {
     setShowKey(showKey === keyId ? null : keyId);
   };
 
+  // ✨ 添加密钥
+  const handleSubmit = async () => {
+    console.log("添加密钥");
+  }
+
   return (
     <div className="space-y-6">
 
@@ -67,14 +63,14 @@ export default function ApiKeysPage() {
               返回
             </Link>
           </Button>
-          <Button onClick={() => setShowAddForm(!showAddForm)}>
-            <Plus className="w-4 h-4 mr-2" />
-            添加密钥
-          </Button>
+
+          {/* 添加密钥按钮 */}
+          <AddApiKeyDialog onSuccess={handleSubmit} />
+
         </div>
       </div>
 
-      {/* 添加密钥表单 */}
+      {/* 密钥表单 */}
       {showAddForm && (
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">添加新 API 密钥</h3>
