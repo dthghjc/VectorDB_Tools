@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+// useEffect不再需要，移除导入
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setAuthFromStorage, validateToken, getCurrentUser } from '@/store/slices/authSlice';
+import { useAppSelector } from '@/store/hooks';
+// 注意：不再需要导入setAuthFromStorage和validateToken，这些在AuthProvider中处理
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -21,28 +21,14 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children, allowed, redirectTo }: RequireAuthProps) {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
   const location = useLocation();
-  const { isAuthenticated, token, user, isLoading } = useAppSelector(state => state.auth);
+  const { isAuthenticated, isLoading } = useAppSelector(state => state.auth);
 
-  useEffect(() => {
-    // 组件挂载时，首先从localStorage恢复认证状态
-    dispatch(setAuthFromStorage());
-  }, [dispatch]);
+  // 注意：认证状态的初始化已经在AuthProvider中完成
+  // RequireAuth只需要读取状态，不需要重复初始化
 
-  useEffect(() => {
-    // 验证token有效性
-    if (token) {
-      dispatch(validateToken());
-    }
-  }, [dispatch, token]);
-
-  useEffect(() => {
-    // 如果有token但没有用户信息，获取用户信息
-    if (isAuthenticated && token && !user && !isLoading) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch, isAuthenticated, token, user, isLoading]);
+  // 注意：不再需要获取用户信息的useEffect
+  // 登录时已经包含了所有必要的用户信息
 
   // 显示加载状态，直到认证状态确定
   if (isLoading) {

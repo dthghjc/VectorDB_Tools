@@ -26,6 +26,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // 应用启动时初始化认证状态
+    // 注意：在StrictMode下此useEffect会执行两次，这是正常的开发模式行为
     dispatch(setAuthFromStorage());
     dispatch(validateToken());
   }, [dispatch]);

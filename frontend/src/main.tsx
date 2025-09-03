@@ -24,7 +24,7 @@ function LoadingFallback() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  //<React.StrictMode>
     <Provider store={store}>
       <AuthProvider>
         <Suspense fallback={<LoadingFallback />}>
@@ -32,5 +32,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </Suspense>
       </AuthProvider>
     </Provider>
-  </React.StrictMode>
+  //</React.StrictMode>
 );
