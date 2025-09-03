@@ -41,6 +41,11 @@
       "successTitle": "Registration Successful!",
       "successDescription": "Your account has been created and is pending admin approval. We'll review your application soon.",
       "backToLogin": "Back to Login"
+    },
+    "auth": {
+      "verifying": "Verifying identity...",
+      "loading": "Loading...",
+      "loginSuccess": "Login successful, redirecting..."
     }
   }
   

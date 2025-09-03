@@ -41,6 +41,11 @@
       "successTitle": "注册成功！",
       "successDescription": "您的账户已创建，但需要管理员审核激活。我们会尽快处理您的申请。",
       "backToLogin": "返回登录"
+    },
+    "auth": {
+      "verifying": "验证身份中...",
+      "loading": "加载中...",
+      "loginSuccess": "登录成功，正在跳转..."
     }
   }
   

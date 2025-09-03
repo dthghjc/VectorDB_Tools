@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setAuthFromStorage, validateToken, getCurrentUser } from '@/store/slices/authSlice';
 
@@ -19,6 +20,7 @@ interface RequireAuthProps {
 }
 
 export default function RequireAuth({ children, allowed, redirectTo }: RequireAuthProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const location = useLocation();
   const { isAuthenticated, token, user, isLoading } = useAppSelector(state => state.auth);
@@ -48,7 +50,7 @@ export default function RequireAuth({ children, allowed, redirectTo }: RequireAu
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-sm text-muted-foreground">验证身份中...</p>
+          <p className="text-sm text-muted-foreground">{t('auth.verifying')}</p>
         </div>
       </div>
     );

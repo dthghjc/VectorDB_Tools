@@ -1,4 +1,5 @@
-import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { TypedUseSelectorHook } from 'react-redux';
 import type { RootState, AppDispatch } from './index';
 
 // 使用自定义hooks而不是原始的useDispatch和useSelector
