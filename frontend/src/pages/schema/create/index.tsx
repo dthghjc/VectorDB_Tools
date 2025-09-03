@@ -80,14 +80,7 @@ export default function CreateSchemaPage() {
 
   return (
     <div className="space-y-6">
-      {/* 面包屑导航 */}
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link to="/schema" className="hover:text-foreground">
-          Schema 管理
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">创建 Schema</span>
-      </div>
+
 
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">

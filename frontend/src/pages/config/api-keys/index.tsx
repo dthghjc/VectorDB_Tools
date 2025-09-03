@@ -6,6 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Plus, Key, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+
 // 模拟的 API 密钥数据
 const mockApiKeys = [
   {
@@ -39,14 +50,7 @@ export default function ApiKeysPage() {
 
   return (
     <div className="space-y-6">
-      {/* 面包屑导航 */}
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link to="/config" className="hover:text-foreground">
-          配置中心
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">API 密钥</span>
-      </div>
+
 
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">

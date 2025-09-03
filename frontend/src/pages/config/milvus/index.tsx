@@ -32,14 +32,7 @@ export default function MilvusConfigPage() {
 
   return (
     <div className="space-y-6">
-      {/* 面包屑导航 */}
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link to="/config" className="hover:text-foreground">
-          配置中心
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">Milvus 连接</span>
-      </div>
+
 
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">
