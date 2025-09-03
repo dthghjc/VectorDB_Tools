@@ -44,9 +44,9 @@ export function NavUser() {
   }
 
   // 生成用户头像的初始字母
-  const getInitials = (email: string, username?: string) => {
-    if (username) {
-      return username.slice(0, 2).toUpperCase()
+  const getInitials = (email: string, fullName?: string | null) => {
+    if (fullName) {
+      return fullName.slice(0, 2).toUpperCase()
     }
     return email.slice(0, 2).toUpperCase()
   }
@@ -61,13 +61,13 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src="" alt={user.username || user.email} />
+                <AvatarImage src="" alt={user.full_name || user.email} />
                 <AvatarFallback className="rounded-lg">
-                  {getInitials(user.email, user.username)}
+                  {getInitials(user.email, user.full_name)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.username || user.email}</span>
+                <span className="truncate font-medium">{user.full_name || user.email}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -82,13 +82,13 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src="" alt={user.username || user.email} />
+                  <AvatarImage src="" alt={user.full_name || user.email} />
                   <AvatarFallback className="rounded-lg">
-                    {getInitials(user.email, user.username)}
+                    {getInitials(user.email, user.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.username || user.email}</span>
+                  <span className="truncate font-medium">{user.full_name || user.email}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>

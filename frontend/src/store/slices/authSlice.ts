@@ -6,7 +6,7 @@ import { authService } from '@/services/api/auth';
 export interface User {
   id: string;
   email: string;
-  username: string;
+  full_name: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -27,7 +27,7 @@ interface LoginCredentials {
 
 interface RegisterCredentials {
   email: string;
-  username: string;
+  full_name: string;
   password: string;
 }
 
@@ -168,6 +168,15 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.token = action.payload.access_token;
+        // 根据登录响应创建用户对象（只包含基本信息）
+        state.user = {
+          id: '', // 登录响应中不包含ID，如果需要完整信息需要调用 /auth/me
+          email: action.payload.email,
+          full_name: action.payload.full_name,
+          is_active: true, // 能登录说明是激活的
+          created_at: '',
+          updated_at: ''
+        };
         state.isAuthenticated = true;
         state.error = null;
         // 保存token到localStorage

@@ -10,7 +10,7 @@ from app.core.db import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, get_current_active_user
 from app.crud.user import authenticate_user, create_user, get_user_by_email
-from app.schemas.user import Token, UserLogin, UserRegister, User
+from app.schemas.user import Token, UserLogin, UserRegister, User, LoginResponse
 
 router = APIRouter()
 
@@ -62,7 +62,7 @@ async def register_user(
         )
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login_user(
     user_credentials: UserLogin,
     db: Session = Depends(get_db)
@@ -112,7 +112,9 @@ async def login_user(
     
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "email": user.email,
+        "full_name": user.full_name
     }
 
 

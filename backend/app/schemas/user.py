@@ -57,6 +57,14 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class LoginResponse(BaseModel):
+    """登录响应 - 包含Token和基本用户信息"""
+    access_token: str
+    token_type: str = "bearer"
+    email: EmailStr
+    full_name: Optional[str] = None
+
+
 class TokenData(BaseModel):
     """Token 中携带的数据"""
     email: Optional[str] = None

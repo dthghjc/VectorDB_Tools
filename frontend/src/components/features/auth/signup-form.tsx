@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 export interface SignupFormData {
   email: string
   password: string
-  username: string
+  full_name: string
 }
 
 // 注册表单Props接口
@@ -33,14 +33,14 @@ export function SignupForm({
   const [formData, setFormData] = useState<SignupFormData>({
     email: "",
     password: "",
-    username: ""
+    full_name: ""
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
     // 基础表单验证
-    if (!formData.email || !formData.password || !formData.username) {
+    if (!formData.email || !formData.password || !formData.full_name) {
       return
     }
     
@@ -110,13 +110,13 @@ export function SignupForm({
               )}
 
               <div className="grid gap-3">
-                <Label htmlFor="username">{t('signupForm.fullNameLabel')}</Label>
+                <Label htmlFor="full_name">{t('signupForm.fullNameLabel')}</Label>
                 <Input
-                  id="username"
+                  id="full_name"
                   type="text"
                   placeholder={t('signupForm.fullNamePlaceholder')}
-                  value={formData.username}
-                  onChange={handleInputChange('username')}
+                  value={formData.full_name}
+                  onChange={handleInputChange('full_name')}
                   disabled={loading}
                   required
                 />
