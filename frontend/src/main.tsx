@@ -9,8 +9,6 @@ import './index.css';
 
 import './i18n';
 
-// 移除LoadingFallback，统一使用shadcn表单组件的loading实现
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   //<React.StrictMode>
     <Provider store={store}>
