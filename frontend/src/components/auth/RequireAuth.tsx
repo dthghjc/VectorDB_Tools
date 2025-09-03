@@ -1,9 +1,6 @@
-// useEffect不再需要，移除导入
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@/store/hooks';
-// 注意：不再需要导入setAuthFromStorage和validateToken，这些在AuthProvider中处理
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -20,27 +17,8 @@ interface RequireAuthProps {
 }
 
 export default function RequireAuth({ children, allowed, redirectTo }: RequireAuthProps) {
-  const { t } = useTranslation();
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAppSelector(state => state.auth);
-
-  // 注意：认证状态的初始化已经在AuthProvider中完成
-  // RequireAuth只需要读取状态，不需要重复初始化
-
-  // 注意：不再需要获取用户信息的useEffect
-  // 登录时已经包含了所有必要的用户信息
-
-  // 显示加载状态，直到认证状态确定
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-sm text-muted-foreground">{t('auth.verifying')}</p>
-        </div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAppSelector(state => state.auth);
 
   // 根据allowed参数和当前认证状态决定是否允许访问
   if (allowed && !isAuthenticated) {
