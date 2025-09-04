@@ -59,9 +59,12 @@ class ApiKeyCreateResponse(BaseModel):
     id: UUID
     name: str
     provider: str
+    base_url: str
     key_preview: str
     status: str
+    usage_count: int
     created_at: datetime
+    updated_at: datetime
     message: str = "API Key 创建成功"
 
 

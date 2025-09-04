@@ -90,9 +90,12 @@ async def create_api_key(
             id=api_key.id,
             name=api_key.name,
             provider=api_key.provider,
+            base_url=api_key.base_url,
             key_preview=api_key.key_preview,
             status=api_key.status,
-            created_at=api_key.created_at
+            usage_count=api_key.usage_count,
+            created_at=api_key.created_at,
+            updated_at=api_key.updated_at
         )
         
     except Exception as e:

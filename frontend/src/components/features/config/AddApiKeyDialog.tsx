@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { createApiKey, clearError } from "@/store/slices/apiKeysSlice";
+import { validateApiKeyForm, type ApiKeyValidationErrors } from "@/utils/validation";
 import {
   Dialog,
   DialogContent,
@@ -39,9 +40,13 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
   const [provider, setProvider] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
+  const [validationErrors, setValidationErrors] = useState<ApiKeyValidationErrors>({});
 
-  // 检查表单是否完整
-  const isFormValid = name.trim() && provider.trim() && apiKey.trim() && baseUrl.trim();
+  // 检查表单是否完整且有效
+  const formData = { name, provider, apiKey, baseUrl };
+  const errors = validateApiKeyForm(formData);
+  const isFormValid = Object.keys(errors).length === 0 && 
+                     name.trim() && provider.trim() && apiKey.trim() && baseUrl.trim();
   
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -59,13 +64,20 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
     setProvider("");
     setApiKey("");
     setBaseUrl("");
+    setValidationErrors({});
   };
 
   // 处理保存操作
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // 阻止表单默认提交行为，防止页面跳转
     
-    if (!isFormValid) return;
+    // 验证表单
+    const currentErrors = validateApiKeyForm(formData);
+    setValidationErrors(currentErrors);
+    
+    if (Object.keys(currentErrors).length > 0 || !isFormValid) {
+      return;
+    }
     
     try {
       // 调用 Redux action 创建 API Key
@@ -113,14 +125,19 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
               <Label htmlFor="name" className="text-right">
                 {t('addApiKeyDialog.nameLabel')}
               </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t('addApiKeyDialog.namePlaceholder')}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('addApiKeyDialog.namePlaceholder')}
+                  className={validationErrors.name ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.name && (
+                  <p className="text-xs text-red-500">{validationErrors.name}</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
@@ -141,29 +158,39 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
               <Label htmlFor="apiKey" className="text-right">
                 {t('addApiKeyDialog.apiKeyLabel')}
               </Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
+                  className={validationErrors.apiKey ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.apiKey && (
+                  <p className="text-xs text-red-500">{validationErrors.apiKey}</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="baseUrl" className="text-right">
                 {t('addApiKeyDialog.baseUrlLabel')}
               </Label>
-              <Input
-                id="baseUrl"
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3 space-y-1">
+                <Input
+                  id="baseUrl"
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
+                  className={validationErrors.baseUrl ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.baseUrl && (
+                  <p className="text-xs text-red-500">{validationErrors.baseUrl}</p>
+                )}
+              </div>
             </div>
           </div>
 

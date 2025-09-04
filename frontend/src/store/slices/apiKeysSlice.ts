@@ -208,9 +208,7 @@ const apiKeysSlice = createSlice({
         // 将新创建的项添加到列表开头
         const newItem: ApiKey = {
           ...action.payload,
-          key_preview: action.payload.key_preview || '', // 确保有预览
-          last_used_at: null,
-          updated_at: action.payload.created_at
+          last_used_at: null, // 新创建的密钥从未使用
         };
         state.items.unshift(newItem);
         state.total += 1;
