@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.116.1",
     "fastapi-static-digest>=1.1.0",
     "fastapi-users[sqlalchemy]>=14.0.1",
+    "httpx>=0.28.1",
     "openai>=1.102.0",
     "pandas>=2.3.2",
     "passlib[bcrypt]>=1.7.4",
