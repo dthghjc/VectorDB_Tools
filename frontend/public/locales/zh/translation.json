@@ -68,7 +68,8 @@
     "addButton": "添加密钥",
     "saveButton": "保存密钥",
     "saving": "保存中...",
-    "saveError": "保存失败，请稍后重试"
+    "saveError": "保存失败，请稍后重试",
+    "cancelButton": "取消"
   }
 }
   

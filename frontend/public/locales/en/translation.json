@@ -68,7 +68,8 @@
     "addButton": "Add Key",
     "saveButton": "Save Key",
     "saving": "Saving...",
-    "saveError": "Save failed, please try again later"
+    "saveError": "Save failed, please try again later",
+    "cancelButton": "Cancel"
   }
 }
   

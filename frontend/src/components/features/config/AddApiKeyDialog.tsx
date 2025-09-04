@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,9 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
   };
 
   // 处理保存操作
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // 阻止表单默认提交行为，防止页面跳转
+    
     if (!isFormValid) return;
     
     setIsLoading(true);
@@ -70,8 +73,8 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
       
       // 成功后先清理表单，再关闭对话框
       clearForm();
-      setIsOpen(false);
       onSuccess();
+      setIsOpen(false);
     } catch (err) {
       setError(t('addApiKeyDialog.saveError'));
       setIsLoading(false);
@@ -86,90 +89,99 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
           {t('addApiKeyDialog.addButton')}
         </Button>
       </DialogTrigger>
+
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{t('addApiKeyDialog.title')}</DialogTitle>
-          <DialogDescription>
-            {t('addApiKeyDialog.description')}
-          </DialogDescription>
-        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>{t('addApiKeyDialog.title')}</DialogTitle>
+            <DialogDescription>
+              {t('addApiKeyDialog.description')}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              {t('addApiKeyDialog.nameLabel')}
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('addApiKeyDialog.namePlaceholder')}
-              className="col-span-3"
-              required
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                {t('addApiKeyDialog.nameLabel')}
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('addApiKeyDialog.namePlaceholder')}
+                className="col-span-3"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="provider" className="text-right">
+                {t('addApiKeyDialog.providerLabel')}
+              </Label>
+              <Input
+                id="provider"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                placeholder={t('addApiKeyDialog.providerPlaceholder')}
+                className="col-span-3"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="apiKey" className="text-right">
+                {t('addApiKeyDialog.apiKeyLabel')}
+              </Label>
+              <Input
+                id="apiKey"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
+                className="col-span-3"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="baseUrl" className="text-right">
+                {t('addApiKeyDialog.baseUrlLabel')}
+              </Label>
+              <Input
+                id="baseUrl"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
+                className="col-span-3"
+                required
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="provider" className="text-right">
-              {t('addApiKeyDialog.providerLabel')}
-            </Label>
-            <Input
-              id="provider"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              placeholder={t('addApiKeyDialog.providerPlaceholder')}
-              className="col-span-3"
-              required
-            />
-          </div>
+          {error && <p className="text-sm text-red-500 text-center mb-4">{error}</p>}
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="apiKey" className="text-right">
-              {t('addApiKeyDialog.apiKeyLabel')}
-            </Label>
-            <Input
-              id="apiKey"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
-              className="col-span-3"
-              required
-            />
-          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                {t('addApiKeyDialog.cancelButton')}
+              </Button>
+            </DialogClose>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="baseUrl" className="text-right">
-              {t('addApiKeyDialog.baseUrlLabel')}
-            </Label>
-            <Input
-              id="baseUrl"
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
-              className="col-span-3"
-              required
-            />
-          </div>
-        </div>
-
-        {error && <p className="text-sm text-red-500 text-center mb-4">{error}</p>}
-
-        <DialogFooter>
-          <Button 
-            type="submit" 
-            disabled={!isFormValid || isLoading}
-            onClick={handleSave}
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {t('addApiKeyDialog.saving')}
-              </>
-            ) : (
-              t('addApiKeyDialog.saveButton')
-            )}
-          </Button>
-        </DialogFooter>
+            <Button 
+              type="submit" 
+              disabled={!isFormValid || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {t('addApiKeyDialog.saving')}
+                </>
+              ) : (
+                t('addApiKeyDialog.saveButton')
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

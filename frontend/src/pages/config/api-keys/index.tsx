@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Key, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Key, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import AddApiKeyDialog from "@/components/features/config/AddApiKeyDialog";
@@ -168,21 +168,6 @@ export default function ApiKeysPage() {
           </Card>
         ))}
       </div>
-
-      {/* 安全提示 */}
-      <Card className="p-6 bg-blue-50 border-blue-200">
-        <div className="flex items-start space-x-3">
-          <Key className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div>
-            <h3 className="text-sm font-semibold text-blue-900">安全提示</h3>
-            <p className="text-sm text-blue-700 mt-1">
-              • 所有 API 密钥都经过加密存储<br/>
-              • 定期轮换您的 API 密钥以确保安全<br/>
-              • 不要在公共环境中显示完整密钥
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
