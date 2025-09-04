@@ -241,6 +241,33 @@ class ApiKeyCRUD:
             解密后的明文 API Key
         """
         return decrypt_api_key(encrypted_key)
+    
+    def get_plaintext_key_by_id(self, db: Session, *, api_key_id: UUID, user_id: UUID) -> Optional[str]:
+        """
+        通过 API Key ID 安全获取明文密钥（包含权限验证）
+        
+        Args:
+            db: 数据库会话
+            api_key_id: API Key ID
+            user_id: 用户 ID（用于权限验证）
+            
+        Returns:
+            解密后的明文 API Key，如果不存在或无权限则返回 None
+        """
+        # 先验证权限：确保密钥属于该用户
+        db_obj = db.query(ApiKey).filter(
+            ApiKey.id == api_key_id,
+            ApiKey.user_id == user_id
+        ).first()
+        
+        if not db_obj:
+            return None
+            
+        # 解密并返回明文密钥
+        try:
+            return decrypt_api_key(db_obj.encrypted_api_key)
+        except Exception:
+            return None
 
     def get_user_stats(self, db: Session, *, user_id: UUID) -> dict:
         """
