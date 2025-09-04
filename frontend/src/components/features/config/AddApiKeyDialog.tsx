@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { createApiKey, clearError } from "@/store/slices/apiKeysSlice";
 import {
   Dialog,
   DialogContent,
@@ -23,16 +25,20 @@ interface AddApiKeyDialogProps {
 
 export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   
-  // --- 状态管理 ---
+  // Redux 状态
+  const { loading, error } = useAppSelector((state) => ({
+    loading: state.apiKeys.loading.create,
+    error: state.apiKeys.error.create,
+  }));
+  
+  // 本地表单状态
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // 检查表单是否完整
   const isFormValid = name.trim() && provider.trim() && apiKey.trim() && baseUrl.trim();
@@ -42,6 +48,8 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
     if (!open) {
       // 用户手动关闭对话框时清理表单
       clearForm();
+      // 清除 Redux 错误状态
+      dispatch(clearError('create'));
     }
   };
   
@@ -51,8 +59,6 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
     setProvider("");
     setApiKey("");
     setBaseUrl("");
-    setError(null);
-    setIsLoading(false);
   };
 
   // 处理保存操作
@@ -61,23 +67,26 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
     
     if (!isFormValid) return;
     
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      // TODO: 调用后端API保存密钥
-      console.log("保存密钥:", { name, provider, apiKey, baseUrl });
+      // 调用 Redux action 创建 API Key
+      const result = await dispatch(createApiKey({
+        name: name.trim(),
+        provider: provider.trim(),
+        api_key: apiKey.trim(),
+        base_url: baseUrl.trim(),
+      }));
       
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 成功后先清理表单，再关闭对话框
-      clearForm();
-      onSuccess();
-      setIsOpen(false);
+      // 检查是否成功
+      if (createApiKey.fulfilled.match(result)) {
+        // 成功：清理表单，关闭对话框，调用成功回调
+        clearForm();
+        setIsOpen(false);
+        onSuccess();
+      }
+      // 失败的情况由 Redux 自动处理，错误会显示在 UI 中
     } catch (err) {
-      setError(t('addApiKeyDialog.saveError'));
-      setIsLoading(false);
+      // 额外的错误处理（如果需要）
+      console.error('创建 API Key 失败:', err);
     }
   };
 
@@ -169,9 +178,9 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
 
             <Button 
               type="submit" 
-              disabled={!isFormValid || isLoading}
+              disabled={!isFormValid || loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   {t('addApiKeyDialog.saving')}

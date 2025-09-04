@@ -1,48 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Key, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Key, Eye, EyeOff, ArrowLeft, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { fetchApiKeys, deleteApiKey, updateApiKey } from "@/store/slices/apiKeysSlice";
+import type { ApiKey } from "@/types/apiKeys";
 
 import AddApiKeyDialog from "@/components/features/config/AddApiKeyDialog";
 
-// 模拟的 API 密钥数据
-const mockApiKeys = [
-  {
-    id: "1",
-    name: "OpenAI GPT-4",
-    provider: "OpenAI",
-    keyPreview: "sk-proj-****...****abcd",
-    status: "active",
-    lastUsed: "2024-01-15 14:30:00",
-    createdAt: "2024-01-10 09:00:00"
-  },
-  {
-    id: "2",
-    name: "Google PaLM",
-    provider: "Google",
-    keyPreview: "AIza****...****xyz9",
-    status: "inactive",
-    lastUsed: "从未使用",
-    createdAt: "2024-01-12 16:45:00"
-  }
-];
-
 export default function ApiKeysPage() {
-  const [apiKeys] = useState(mockApiKeys);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const dispatch = useAppDispatch();
+  
+  // Redux 状态
+  const { items: apiKeys, loading, error, total } = useAppSelector((state) => state.apiKeys);
+  
+  // 本地状态
   const [showKey, setShowKey] = useState<string | null>(null);
+
+  // 页面加载时获取数据
+  useEffect(() => {
+    dispatch(fetchApiKeys({}));
+  }, [dispatch]);
 
   const toggleKeyVisibility = (keyId: string) => {
     setShowKey(showKey === keyId ? null : keyId);
   };
 
-  // ✨ 添加密钥
-  const handleSubmit = async () => {
-    console.log("添加密钥");
-  }
+  // 添加密钥成功后的回调
+  const handleAddSuccess = () => {
+    // API Key 创建成功后，Redux 会自动更新列表，这里可以显示成功消息
+    console.log("API Key 添加成功");
+  };
+
+  // 删除 API Key
+  const handleDelete = async (apiKey: ApiKey) => {
+    if (window.confirm(`确定要删除 "${apiKey.name}" 吗？此操作不可撤销。`)) {
+      dispatch(deleteApiKey(apiKey.id));
+    }
+  };
+
+  // 切换状态
+  const handleToggleStatus = async (apiKey: ApiKey) => {
+    const newStatus = apiKey.status === 'active' ? 'inactive' : 'active';
+    dispatch(updateApiKey({
+      id: apiKey.id,
+      data: { status: newStatus }
+    }));
+  };
+
+  // 刷新列表
+  const handleRefresh = () => {
+    dispatch(fetchApiKeys({}));
+  };
 
   return (
     <div className="space-y-6">
@@ -64,52 +74,56 @@ export default function ApiKeysPage() {
             </Link>
           </Button>
 
+          <Button variant="outline" onClick={handleRefresh} disabled={loading.list}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading.list ? 'animate-spin' : ''}`} />
+            刷新
+          </Button>
+
           {/* 添加密钥按钮 */}
-          <AddApiKeyDialog onSuccess={handleSubmit} />
+          <AddApiKeyDialog onSuccess={handleAddSuccess} />
 
         </div>
       </div>
 
-      {/* 密钥表单 */}
-      {showAddForm && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">添加新 API 密钥</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="keyName">密钥名称</Label>
-              <Input id="keyName" placeholder="例如：OpenAI GPT-4" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="provider">服务提供商</Label>
-              <Input id="provider" placeholder="例如：OpenAI" />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="apiKey">API 密钥</Label>
-              <Input 
-                id="apiKey" 
-                type="password" 
-                placeholder="粘贴您的 API 密钥"
-              />
-              <p className="text-xs text-muted-foreground">
-                密钥将被安全加密存储，仅显示前后几位字符
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddForm(false)}>
-              取消
-            </Button>
-            <Button variant="default">
-              保存密钥
-            </Button>
-          </div>
+      {/* 错误提示 */}
+      {error.list && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <p className="text-red-600 text-sm">
+            加载失败：{error.list}
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            className="mt-2"
+          >
+            重试
+          </Button>
         </Card>
       )}
 
       {/* 密钥列表 */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">已保存的密钥</h2>
-        {apiKeys.map((key) => (
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">已保存的密钥</h2>
+          <span className="text-sm text-muted-foreground">
+            共 {total} 个密钥
+          </span>
+        </div>
+
+        {loading.list && apiKeys.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">加载中...</p>
+          </Card>
+        ) : apiKeys.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">暂无 API 密钥</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              点击上方"添加密钥"按钮开始添加
+            </p>
+          </Card>
+        ) : (
+          apiKeys.map((key) => (
           <Card key={key.id} className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -117,13 +131,13 @@ export default function ApiKeysPage() {
                   <Key className="h-6 w-6 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{key.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    提供商：{key.provider}
+                  <h3 className="text-lg font-semibold text-foreground">{key.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    提供商：<span className="font-medium text-foreground">{key.provider}</span>
                   </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {showKey === key.id ? "sk-proj-1234567890abcdef1234567890abcdef" : key.keyPreview}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">
+                      {showKey === key.id ? "sk-proj-1234567890abcdef1234567890abcdef" : key.key_preview}
                     </span>
                     <Button
                       variant="ghost"
@@ -137,9 +151,22 @@ export default function ApiKeysPage() {
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    最后使用：{key.lastUsed} • 创建于：{key.createdAt}
-                  </p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground/70">最后使用：</span>
+                      <span className="font-medium">{key.last_used_at || '从未使用'}</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-muted-foreground/70">创建于：</span>
+                      <span className="font-medium">{new Date(key.created_at).toLocaleString()}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground/70">使用次数：</span>
+                      <span className="font-medium">{key.usage_count}</span>
+                      <span className="mx-2">•</span>
+                      <span className="text-muted-foreground/70">Base URL：</span>
+                      <span className="font-medium text-blue-600 break-all">{key.base_url}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -153,20 +180,31 @@ export default function ApiKeysPage() {
                   </span>
                 </div>
                 <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleToggleStatus(key)}
+                    disabled={loading.update}
+                  >
+                    {key.status === 'active' ? '禁用' : '启用'}
+                  </Button>
                   <Button variant="outline" size="sm">
                     测试
                   </Button>
-                  <Button variant="outline" size="sm">
-                    编辑
-                  </Button>
-                  <Button variant="destructive" size="sm">
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDelete(key)}
+                    disabled={loading.delete}
+                  >
                     删除
                   </Button>
                 </div>
               </div>
             </div>
           </Card>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
