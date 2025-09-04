@@ -1,14 +1,34 @@
+import sys
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.crypto import initialize_crypto
+
+# 启动前检查所有必要的加密密钥
+try:
+    settings.validate_crypto_keys()
+    print("✅ 加密密钥配置检查通过")
+except ValueError as e:
+    print(str(e))
+    sys.exit(1)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时初始化加密系统
+    initialize_crypto()
+    yield
+    # 关闭时的清理（如果需要）
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
     title="VectorDB Tools API",
     description="A comprehensive tool for managing vector databases and data processing workflows",
     version="1.0.0",
+    lifespan=lifespan,
     # 禁用默认的 docs，我们将创建自定义的
     docs_url=None,
     redoc_url=None
@@ -25,6 +45,7 @@ app.add_middleware(
 
 # 包含 API 路由
 app.include_router(api_router, prefix="/api/v1")
+
 
 
 @app.get("/docs", response_class=HTMLResponse)
