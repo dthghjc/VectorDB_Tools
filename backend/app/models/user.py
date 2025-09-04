@@ -1,7 +1,7 @@
 # backend/app/models/user.py
 
 from sqlalchemy import Integer, String, Boolean, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 # 1. 导入 PostgreSQL 特定的 UUID 类型
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -21,3 +21,6 @@ class User(Base, TimestampMixin):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
+    
+    # 关系映射 - 一个用户可以有多个 API Key
+    api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
