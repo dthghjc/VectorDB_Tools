@@ -1,16 +1,17 @@
 # backend/app/api/v1/endpoints/keys/router.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.crypto import get_public_key
 from app.core.security import get_current_active_user
 from app.models.user import User
+from app.schemas.crypto import RSAPublicKeyResponse
 
 router = APIRouter()
 
-@router.get("/public-key", summary="获取 RSA 公钥")
+@router.get("/public-key", summary="获取 RSA 公钥", response_model=RSAPublicKeyResponse)
 async def get_rsa_public_key(
     current_user: User = Depends(get_current_active_user)
-):
+) -> RSAPublicKeyResponse:
     """
     获取 RSA 公钥
     
@@ -21,27 +22,25 @@ async def get_rsa_public_key(
         
     Returns:
         包含 PEM 格式公钥的响应
+        
+    Raises:
+        HTTPException: 当公钥获取失败时
     """
     try:
         public_key_pem = get_public_key()
         
-        return {
-            "success": True,
-            "data": {
-                "public_key": public_key_pem,
-                "algorithm": "RSA-OAEP",
-                "key_size": 2048,
-                "usage": "encrypt_api_keys"
-            },
-            "message": "RSA 公钥获取成功"
-        }
+        return RSAPublicKeyResponse(public_key=public_key_pem)
         
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"加密系统未就绪: {e}"
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "error": f"获取公钥失败: {str(e)}",
-            "data": None
-        }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取公钥失败: {e}"
+        )
 
 # 未来在这里添加 API Key CRUD 端点
 # @router.post("/", summary="创建 API Key")

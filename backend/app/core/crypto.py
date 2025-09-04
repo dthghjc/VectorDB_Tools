@@ -9,6 +9,8 @@ from cryptography.hazmat.backends import default_backend
 import secrets
 import logging
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
 class RSAKeyManager:
@@ -53,8 +55,6 @@ class RSAKeyManager:
     def _load_from_env(self) -> bool:
         """从统一配置加载 RSA 密钥对"""
         try:
-            from app.core.config import settings
-            
             private_key_pem = settings.RSA_PRIVATE_KEY
             public_key_pem = settings.RSA_PUBLIC_KEY
             
@@ -145,8 +145,6 @@ class AESCrypto:
     
     def _get_key_from_config(self) -> bytes:
         """从配置获取 AES 密钥"""
-        from app.core.config import settings
-        
         aes_key_b64 = settings.AES_ENCRYPTION_KEY
         if not aes_key_b64:
             raise ValueError("AES_ENCRYPTION_KEY 未配置！请运行 ./generate-keys.sh 生成密钥")
