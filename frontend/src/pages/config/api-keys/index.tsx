@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Key, Eye, EyeOff, ArrowLeft, RefreshCw } from "lucide-react";
+import { Key, ArrowLeft, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchApiKeys, deleteApiKey, updateApiKey } from "@/store/slices/apiKeysSlice";
@@ -15,17 +15,10 @@ export default function ApiKeysPage() {
   // Redux 状态
   const { items: apiKeys, loading, error, total } = useAppSelector((state) => state.apiKeys);
   
-  // 本地状态
-  const [showKey, setShowKey] = useState<string | null>(null);
-
   // 页面加载时获取数据
   useEffect(() => {
     dispatch(fetchApiKeys({}));
   }, [dispatch]);
-
-  const toggleKeyVisibility = (keyId: string) => {
-    setShowKey(showKey === keyId ? null : keyId);
-  };
 
   // 添加密钥成功后的回调
   const handleAddSuccess = () => {
@@ -135,23 +128,16 @@ export default function ApiKeysPage() {
                   <p className="text-sm text-muted-foreground mt-1">
                     提供商：<span className="font-medium text-foreground">{key.provider}</span>
                   </p>
-                  <div className="flex items-center space-x-2 mt-2">
+                  <div className="mt-2">
                     <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">
-                      {showKey === key.id ? "sk-proj-1234567890abcdef1234567890abcdef" : key.key_preview}
+                      {key.key_preview}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleKeyVisibility(key.id)}
-                    >
-                      {showKey === key.id ? (
-                        <EyeOff className="h-3 w-3" />
-                      ) : (
-                        <Eye className="h-3 w-3" />
-                      )}
-                    </Button>
                   </div>
                   <div className="mt-2 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground/70">Base URL：</span>
+                      <span className="font-medium text-blue-600 break-all">{key.base_url}</span>
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       <span className="text-muted-foreground/70">最后使用：</span>
                       <span className="font-medium">{key.last_used_at || '从未使用'}</span>
@@ -159,13 +145,7 @@ export default function ApiKeysPage() {
                       <span className="text-muted-foreground/70">创建于：</span>
                       <span className="font-medium">{new Date(key.created_at).toLocaleString()}</span>
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-muted-foreground/70">使用次数：</span>
-                      <span className="font-medium">{key.usage_count}</span>
-                      <span className="mx-2">•</span>
-                      <span className="text-muted-foreground/70">Base URL：</span>
-                      <span className="font-medium text-blue-600 break-all">{key.base_url}</span>
-                    </p>
+
                   </div>
                 </div>
               </div>
