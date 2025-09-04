@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Key, ArrowLeft, RefreshCw } from "lucide-react";
@@ -168,9 +168,11 @@ export default function ApiKeysPage() {
                   >
                     {key.status === 'active' ? '禁用' : '启用'}
                   </Button>
+                  
                   <Button variant="outline" size="sm">
                     测试
                   </Button>
+
                   <Button 
                     variant="destructive" 
                     size="sm"
