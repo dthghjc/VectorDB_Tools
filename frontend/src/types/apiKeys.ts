@@ -1,12 +1,33 @@
 // types/apiKeys.ts
 
 /**
+ * API 供应商枚举（与后端保持一致）
+ */
+export const ApiProvider = {
+  OPENAI: "openai",
+  SILICONFLOW: "siliconflow", 
+  BCE_QIANFAN: "bce-qianfan",
+  NVIDIA_NIM: "nvidia-nim",
+  OLLAMA: "ollama"
+} as const;
+
+export type ApiProvider = typeof ApiProvider[keyof typeof ApiProvider];
+
+/**
+ * 供应商选项接口（用于下拉选择器）
+ */
+export interface ProviderOption {
+  value: string;
+  label: string;
+}
+
+/**
  * API Key 实体接口（与后端响应一致）
  */
 export interface ApiKey {
   id: string;
   name: string;
-  provider: string;
+  provider: ApiProvider;
   base_url: string;
   key_preview: string;
   status: 'active' | 'inactive';
@@ -21,7 +42,7 @@ export interface ApiKey {
  */
 export interface CreateApiKeyRequest {
   name: string;
-  provider: string;
+  provider: ApiProvider;
   api_key: string;  // 明文密钥，将在前端加密
   base_url: string;
 }
@@ -32,7 +53,7 @@ export interface CreateApiKeyRequest {
 export interface CreateApiKeyResponse {
   id: string;
   name: string;
-  provider: string;
+  provider: ApiProvider;
   base_url: string;
   key_preview: string;
   status: 'active';
@@ -46,7 +67,14 @@ export interface CreateApiKeyResponse {
  */
 export interface UpdateApiKeyRequest {
   name?: string;
-  provider?: string;
+  provider?: ApiProvider;
   base_url?: string;
   status?: 'active' | 'inactive';
+}
+
+/**
+ * 获取供应商列表响应接口
+ */
+export interface GetProvidersResponse {
+  providers: string[];
 }

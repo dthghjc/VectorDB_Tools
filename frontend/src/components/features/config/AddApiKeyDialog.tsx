@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { createApiKey, clearError } from "@/store/slices/apiKeysSlice";
 import { validateApiKeyForm, type ApiKeyValidationErrors } from "@/utils/validation";
+import { apiKeyService } from "@/services/api/apiKeys";
+import { transformProvidersToOptions } from "@/constants/providers";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +15,17 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select, 
+  SelectContent, 
+  SelectGroup,
+  SelectItem, 
+  SelectLabel,
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+
+import { type ApiProvider, type ProviderOption } from "@/types/apiKeys";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,10 +50,39 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
   // 本地表单状态
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
-  const [provider, setProvider] = useState("");
+  const [provider, setProvider] = useState<string>("");
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [validationErrors, setValidationErrors] = useState<ApiKeyValidationErrors>({});
+  
+  // 供应商选项状态
+  const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+
+  // 加载供应商列表
+  useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        setLoadingProviders(true);
+        const providers = await apiKeyService.getProviders();
+        const options = transformProvidersToOptions(providers);
+        setProviderOptions(options);
+      } catch (error) {
+        console.error('获取供应商列表失败:', error);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    if (isOpen) {
+      loadProviders();
+    }
+  }, [isOpen]);
+
+  // 处理供应商选择变化
+  const handleProviderChange = (selectedProvider: string) => {
+    setProvider(selectedProvider);
+  };
 
   // 检查表单是否完整且有效
   const formData = { name, provider, apiKey, baseUrl };
@@ -83,7 +125,7 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
       // 调用 Redux action 创建 API Key
       const result = await dispatch(createApiKey({
         name: name.trim(),
-        provider: provider.trim(),
+        provider: provider.trim() as ApiProvider,
         api_key: apiKey.trim(),
         base_url: baseUrl.trim(),
       }));
@@ -144,14 +186,34 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
               <Label htmlFor="provider" className="text-right">
                 {t('addApiKeyDialog.providerLabel')}
               </Label>
-              <Input
-                id="provider"
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                placeholder={t('addApiKeyDialog.providerPlaceholder')}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3 space-y-1">
+                <Select 
+                  value={provider} 
+                  onValueChange={handleProviderChange}
+                  disabled={loadingProviders}
+                >
+                  <SelectTrigger className={validationErrors.provider ? "border-red-500" : ""}>
+                    <SelectValue placeholder={
+                      loadingProviders 
+                        ? "加载中..." 
+                        : t('addApiKeyDialog.providerPlaceholder')
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>API 服务供应商</SelectLabel>
+                      {providerOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {validationErrors.provider && (
+                  <p className="text-xs text-red-500">{validationErrors.provider}</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">

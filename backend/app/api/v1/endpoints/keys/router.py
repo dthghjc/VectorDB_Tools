@@ -11,12 +11,26 @@ from app.core.db import get_db
 from app.models.user import User
 from app.schemas.crypto import RSAPublicKeyResponse
 from app.schemas import api_key as schemas
+from app.schemas.api_key import ApiProvider
 from app.crud.api_key import api_key_crud
 import logging
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+@router.get("/providers", summary="获取支持的API供应商列表", response_model=schemas.ApiProviderListResponse)
+async def get_api_providers(
+    current_user: User = Depends(get_current_active_user)
+) -> schemas.ApiProviderListResponse:
+    """
+    获取支持的API供应商列表
+    
+    返回所有支持的API供应商选项，前端可用于下拉选择器。
+    """
+    providers = [provider.value for provider in ApiProvider]
+    return schemas.ApiProviderListResponse(providers=providers)
+
 
 @router.get("/public-key", summary="获取 RSA 公钥", response_model=RSAPublicKeyResponse)
 async def get_rsa_public_key(

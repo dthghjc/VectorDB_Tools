@@ -4,7 +4,8 @@ import { rsaCrypto, encryptWithPublicKey } from '@/utils/crypto';
 import type { 
   ApiKey, 
   CreateApiKeyRequest, 
-  CreateApiKeyResponse 
+  CreateApiKeyResponse,
+  GetProvidersResponse
 } from '@/types/apiKeys';
 
 /**
@@ -54,6 +55,14 @@ interface ApiKeyTestResponse {
  * API Key 管理服务
  */
 export const apiKeyService = {
+  /**
+   * 获取支持的API供应商列表
+   */
+  getProviders: async (): Promise<string[]> => {
+    const response = await apiClient.get<GetProvidersResponse>('/keys/providers');
+    return response.data.providers;
+  },
+
   /**
    * 获取 RSA 公钥（用于前端加密）
    */

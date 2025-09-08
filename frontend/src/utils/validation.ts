@@ -2,6 +2,8 @@
  * 表单验证工具函数
  */
 
+import { ApiProvider } from '@/types/apiKeys';
+
 /**
  * 验证 URL 格式
  */
@@ -24,6 +26,13 @@ export function isValidLength(value: string, min: number, max: number): boolean 
 }
 
 /**
+ * 验证API供应商是否有效
+ */
+export function isValidProvider(provider: string): boolean {
+  return Object.values(ApiProvider).includes(provider as ApiProvider);
+}
+
+/**
  * API Key 创建表单验证
  */
 export interface ApiKeyValidationErrors {
@@ -35,7 +44,7 @@ export interface ApiKeyValidationErrors {
 
 export function validateApiKeyForm(data: {
   name: string;
-  provider: string;
+  provider: ApiProvider | string;
   apiKey: string;
   baseUrl: string;
 }): ApiKeyValidationErrors {
@@ -49,10 +58,10 @@ export function validateApiKeyForm(data: {
   }
 
   // 验证提供商
-  if (!data.provider.trim()) {
-    errors.provider = '请输入服务提供商';
-  } else if (!isValidLength(data.provider, 1, 100)) {
-    errors.provider = '提供商名称长度必须在1-100个字符之间';
+  if (!data.provider || !data.provider.toString().trim()) {
+    errors.provider = '请选择服务提供商';
+  } else if (!isValidProvider(data.provider.toString())) {
+    errors.provider = '请选择有效的服务提供商';
   }
 
   // 验证 API Key（只检查非空）

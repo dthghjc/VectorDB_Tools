@@ -3,13 +3,23 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
+from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict
+
+
+class ApiProvider(str, Enum):
+    """API 服务提供商枚举"""
+    OPENAI = "openai"
+    SILICONFLOW = "siliconflow"
+    BCE_QIANFAN = "bce-qianfan"
+    NVIDIA_NIM = "nvidia-nim"
+    OLLAMA = "ollama"
 
 
 class ApiKeyBase(BaseModel):
     """API Key 基础模式"""
     name: str = Field(..., min_length=1, max_length=255, description="API Key 名称")
-    provider: str = Field(..., min_length=1, max_length=100, description="服务提供商")
+    provider: ApiProvider = Field(..., description="服务提供商")
     base_url: str = Field(..., min_length=1, max_length=500, description="API 基础 URL")
 
 
@@ -21,7 +31,7 @@ class ApiKeyCreate(ApiKeyBase):
 class ApiKeyUpdate(BaseModel):
     """更新 API Key 请求模式"""
     name: Optional[str] = Field(None, min_length=1, max_length=255, description="API Key 名称")
-    provider: Optional[str] = Field(None, min_length=1, max_length=100, description="服务提供商")
+    provider: Optional[ApiProvider] = Field(None, description="服务提供商")
     base_url: Optional[str] = Field(None, min_length=1, max_length=500, description="API 基础 URL")
     status: Optional[str] = Field(None, pattern="^(active|inactive)$", description="API Key 状态")
 
@@ -79,3 +89,8 @@ class ApiKeyTestResponse(BaseModel):
     message: str
     response_time_ms: Optional[float] = None
     status_code: Optional[int] = None
+
+
+class ApiProviderListResponse(BaseModel):
+    """API 供应商列表响应"""
+    providers: list[str] = Field(..., description="支持的API供应商列表")
