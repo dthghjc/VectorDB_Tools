@@ -26,7 +26,7 @@ class OpenAIClient(LLMClient):
                 return True, "API key is valid (validated via list_models)."
             
             elif method == "embedding":
-                # 为 NVIDIA / SiliconFlow 执行 embedding 验证
+                # 为 NVIDIA / SiliconFlow / Qianfan 执行 embedding 验证
                 test_model = self.validation_config.get("test_model")
                 if not test_model:
                     return False, "Validation failed: test_model is not configured."

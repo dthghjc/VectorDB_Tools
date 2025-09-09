@@ -1,11 +1,10 @@
 from .base import LLMClient
 from .openai_client import OpenAIClient
-from .baidu_qianfan_client import BaiduQianfanClient
 from .ollama_client import OllamaClient
 
 class LLMClientFactory:
     # 1. 定义哪些客户端由 OpenAIClient 处理
-    _OPENAI_COMPATIBLE_PROVIDERS = {"openai", "siliconflow", "nvidia-nim"}
+    _OPENAI_COMPATIBLE_PROVIDERS = {"openai", "siliconflow", "nvidia-nim", "bce-qianfan"}
     
     # 2. 为这些兼容的客户端提供各自的“验证说明书”
     _VALIDATION_CONFIGS = {
@@ -20,11 +19,14 @@ class LLMClientFactory:
             "method": "embedding",
             "test_model": "baai/bge-m3" # NVIDIA NIM 的测试模型
         },
+        "bce-qianfan": {
+            "method": "embedding",
+            "test_model": "embedding-v1" # 百度千帆的测试模型
+        },
     }
     
     # 3. 特殊的客户端类
     _clients = {
-        "bce-qianfan": BaiduQianfanClient,
         "ollama": OllamaClient,
     }
 

@@ -202,7 +202,7 @@ def test_error_handling():
         {
             "provider": "bce-qianfan",
             "fake_key": "fake_ak:fake_sk",
-            "base_url": "https://aip.baidubce.com"
+            "base_url": "https://qianfan.baidubce.com/v2"
         }
     ]
     
