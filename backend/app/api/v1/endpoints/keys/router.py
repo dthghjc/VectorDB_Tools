@@ -15,12 +15,12 @@ from app.schemas.crypto import RSAPublicKeyResponse
 from app.schemas import api_key as schemas
 from app.schemas.api_key import ApiProvider
 from app.crud.api_key import api_key_crud
-from app.services.api_key_service import api_key_service
+from app.services.api_key_service import api_key_service, ApiKeyServiceError
 
 import logging
 
 
-from app.services.api_key_service import api_key_service
+
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ async def create_api_key(
     Raises:
         HTTPException: 当名称重复或创建失败时
     """
-    from app.services.api_key_service import api_key_service, ApiKeyServiceError
+    
     
     try:
         # 使用服务层创建 API Key
@@ -159,7 +159,7 @@ async def get_api_keys(
     Returns:
         分页的 API Key 列表
     """
-    from app.services.api_key_service import api_key_service
+    
     
     try:
         # 使用服务层获取 API Key 列表
