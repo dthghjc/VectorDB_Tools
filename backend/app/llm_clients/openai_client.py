@@ -11,8 +11,6 @@ class OpenAIClient(LLMClient):
         try:
             client = OpenAI(api_key=self.api_key, base_url=self.base_url)
             client.models.list()
-            #打印模型
-            print(client.models.list())
             return True, "API key is valid."
         except AuthenticationError as e:
             # 捕获专门的认证失败异常

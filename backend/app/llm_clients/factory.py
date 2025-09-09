@@ -1,6 +1,3 @@
-# 这个文件不需要任何改动！
-# 这正是工厂模式的强大之处，它不关心客户端具体执行什么任务。
-
 from .base import LLMClient
 from .openai_client import OpenAIClient
 from .ollama_client import OllamaClient
@@ -10,6 +7,7 @@ class LLMClientFactory:
     _clients = {
         "openai": OpenAIClient,
         "siliconflow": OpenAIClient,
+        "nvidia-nim": OpenAIClient,
         "ollama": OllamaClient,
         "bce-qianfan": BaiduQianfanClient,
     }
