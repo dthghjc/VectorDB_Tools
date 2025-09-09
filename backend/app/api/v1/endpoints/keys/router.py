@@ -1,7 +1,9 @@
 # backend/app/api/v1/endpoints/keys/router.py
 
+import time
 from typing import Optional
 from uuid import UUID
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
@@ -13,7 +15,12 @@ from app.schemas.crypto import RSAPublicKeyResponse
 from app.schemas import api_key as schemas
 from app.schemas.api_key import ApiProvider
 from app.crud.api_key import api_key_crud
+from app.services.api_key_service import api_key_service
+
 import logging
+
+
+from app.services.api_key_service import api_key_service
 
 logger = logging.getLogger(__name__)
 
@@ -88,30 +95,39 @@ async def create_api_key(
     Raises:
         HTTPException: 当名称重复或创建失败时
     """
-    # 检查名称是否重复
-    existing = api_key_crud.get_by_name(db, name=api_key_in.name, user_id=current_user.id)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"API Key 名称 '{api_key_in.name}' 已存在"
-        )
+    from app.services.api_key_service import api_key_service, ApiKeyServiceError
     
     try:
-        # 创建 API Key
-        api_key = api_key_crud.create(db, obj_in=api_key_in, user_id=current_user.id)
-        
-        return schemas.ApiKeyCreateResponse(
-            id=api_key.id,
-            name=api_key.name,
-            provider=api_key.provider,
-            base_url=api_key.base_url,
-            key_preview=api_key.key_preview,
-            status=api_key.status,
-            usage_count=api_key.usage_count,
-            created_at=api_key.created_at,
-            updated_at=api_key.updated_at
+        # 使用服务层创建 API Key
+        api_key_data = api_key_service.create_api_key(
+            user_id=current_user.id,
+            api_key_data=api_key_in,
+            db=db
         )
         
+        return schemas.ApiKeyCreateResponse(
+            id=UUID(api_key_data["id"]),
+            name=api_key_data["name"],
+            provider=api_key_data["provider"],
+            base_url=api_key_data["base_url"],
+            key_preview=api_key_data["key_preview"],
+            status=api_key_data["status"],
+            usage_count=api_key_data["usage_count"],
+            created_at=datetime.fromisoformat(api_key_data["created_at"]),
+            updated_at=datetime.fromisoformat(api_key_data["updated_at"])
+        )
+        
+    except ApiKeyServiceError as e:
+        if e.error_code == "DUPLICATE_NAME":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=e.message
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=e.message
+            )
     except Exception as e:
         logger.error(f"创建 API Key 失败: {e}")
         raise HTTPException(
@@ -143,24 +159,35 @@ async def get_api_keys(
     Returns:
         分页的 API Key 列表
     """
-    items, total = api_key_crud.get_multi(
-        db, 
-        user_id=current_user.id,
-        skip=skip,
-        limit=limit,
-        provider=provider,
-        status=status
-    )
+    from app.services.api_key_service import api_key_service
     
-    pages = (total + limit - 1) // limit  # 向上取整
-    
-    return schemas.ApiKeyList(
-        items=[schemas.ApiKeyResponse.model_validate(item) for item in items],
-        total=total,
-        page=skip // limit + 1,
-        size=limit,
-        pages=pages
-    )
+    try:
+        # 使用服务层获取 API Key 列表
+        result = api_key_service.get_user_api_keys(
+            user_id=current_user.id,
+            db=db,
+            provider=provider,
+            status=status,
+            skip=skip,
+            limit=limit
+        )
+        
+        pages = (result["total"] + limit - 1) // limit  # 向上取整
+        
+        return schemas.ApiKeyList(
+            items=[schemas.ApiKeyResponse(**item) for item in result["items"]],
+            total=result["total"],
+            page=skip // limit + 1,
+            size=limit,
+            pages=pages
+        )
+        
+    except Exception as e:
+        logger.error(f"获取 API Key 列表失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取 API Key 列表失败"
+        )
 
 
 @router.get("/{key_id}", summary="获取单个 API Key", response_model=schemas.ApiKeyResponse)
@@ -274,27 +301,27 @@ async def test_api_key(
     *,
     db: Session = Depends(get_db),
     key_id: UUID,
-    test_in: Optional[schemas.ApiKeyTestRequest] = None,
     current_user: User = Depends(get_current_active_user)
 ) -> schemas.ApiKeyTestResponse:
     """
     测试 API Key 连通性
     
+    使用统一的 LLM 客户端验证机制，无需传入额外参数。
+    每个提供商都有自己的最佳验证方式。
+    
     Args:
         key_id: API Key ID
-        test_in: 测试请求数据
         current_user: 当前用户
         
     Returns:
-        测试结果
+        测试结果，包含响应时间和详细状态
         
     Raises:
-        HTTPException: 当 API Key 不存在或测试失败时
+        HTTPException: 当 API Key 不存在时
     """
-    import time
-    import httpx
     
-    # 获取 API Key
+    
+    # 获取 API Key（包含权限验证）
     api_key = api_key_crud.get(db, id=key_id, user_id=current_user.id)
     if not api_key:
         raise HTTPException(
@@ -303,58 +330,49 @@ async def test_api_key(
         )
     
     if not api_key.is_active():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="API Key 已被禁用"
+        return schemas.ApiKeyTestResponse(
+            success=False,
+            message="API Key 已被禁用，请先启用后再测试"
         )
     
+    # 记录开始时间
+    start_time = time.time()
+    
     try:
-        # 解密获取真实密钥
-        real_api_key = api_key_crud.get_plaintext_key(encrypted_key=api_key.encrypted_api_key)
+        # 使用服务层的统一验证方法
+        is_valid, message = api_key_service.validate_api_key(
+            api_key_id=key_id,
+            user_id=current_user.id,
+            db=db
+        )
         
-        # 构建测试URL
-        test_endpoint = test_in.test_endpoint if test_in else "/models"
-        test_url = f"{api_key.base_url.rstrip('/')}{test_endpoint}"
+        # 计算响应时间
+        response_time = (time.time() - start_time) * 1000
         
-        # 执行测试请求
-        start_time = time.time()
-        
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                test_url,
-                headers={"Authorization": f"Bearer {real_api_key}"}
-            )
-        
-        response_time = (time.time() - start_time) * 1000  # 转换为毫秒
-        
-        # 更新使用统计
-        api_key_crud.update_usage(db, db_obj=api_key)
-        
-        if response.status_code == 200:
+        if is_valid:
+            # 更新使用统计（仅在验证成功时）
+            api_key_crud.update_usage(db, db_obj=api_key)
+            
             return schemas.ApiKeyTestResponse(
                 success=True,
-                message="API Key 测试成功",
-                response_time_ms=response_time,
-                status_code=response.status_code
+                message=message,
+                response_time_ms=round(response_time, 2)
             )
         else:
             return schemas.ApiKeyTestResponse(
                 success=False,
-                message=f"API 返回错误: {response.status_code}",
-                response_time_ms=response_time,
-                status_code=response.status_code
+                message=message,
+                response_time_ms=round(response_time, 2)
             )
             
-    except httpx.TimeoutException:
-        return schemas.ApiKeyTestResponse(
-            success=False,
-            message="请求超时，请检查网络连接或API服务状态"
-        )
     except Exception as e:
-        logger.error(f"API Key 测试失败: {e}")
+        response_time = (time.time() - start_time) * 1000
+        logger.error(f"API Key 测试过程中发生错误: {e}", exc_info=True)
+        
         return schemas.ApiKeyTestResponse(
             success=False,
-            message=f"测试失败: {str(e)}"
+            message=f"测试过程中发生错误: {str(e)}",
+            response_time_ms=round(response_time, 2)
         )
 
 
