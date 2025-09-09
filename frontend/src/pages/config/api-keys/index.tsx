@@ -1,6 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Key, ArrowLeft, RefreshCw, CheckCircle, Loader2, AlertCircle, Power, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,6 +26,10 @@ export default function ApiKeysPage() {
   // Redux 状态
   const { items: apiKeys, loading, error, total } = useAppSelector((state) => state.apiKeys);
   
+  // 删除对话框状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [apiKeyToDelete, setApiKeyToDelete] = useState<ApiKey | null>(null);
+  
   // 页面加载时获取数据
   useEffect(() => {
     dispatch(fetchApiKeys({}));
@@ -27,11 +41,25 @@ export default function ApiKeysPage() {
     console.log("API Key 添加成功");
   };
 
-  // 删除 API Key
-  const handleDelete = async (apiKey: ApiKey) => {
-    if (window.confirm(`确定要删除 "${apiKey.name}" 吗？此操作不可撤销。`)) {
-      dispatch(deleteApiKey(apiKey.id));
+  // 打开删除确认对话框
+  const handleDeleteClick = (apiKey: ApiKey) => {
+    setApiKeyToDelete(apiKey);
+    setDeleteDialogOpen(true);
+  };
+
+  // 确认删除 API Key
+  const handleDeleteConfirm = async () => {
+    if (apiKeyToDelete) {
+      dispatch(deleteApiKey(apiKeyToDelete.id));
+      setDeleteDialogOpen(false);
+      setApiKeyToDelete(null);
     }
+  };
+
+  // 取消删除
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setApiKeyToDelete(null);
   };
 
   // 切换状态
@@ -255,7 +283,7 @@ export default function ApiKeysPage() {
                   <Button 
                     variant="destructive" 
                     size="sm"
-                    onClick={() => handleDelete(key)}
+                    onClick={() => handleDeleteClick(key)}
                     disabled={loading.delete}
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
@@ -268,6 +296,31 @@ export default function ApiKeysPage() {
           ))
         )}
       </div>
+
+      {/* 删除确认对话框 */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除 API 密钥</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除 "{apiKeyToDelete?.name}" 吗？
+              <br />
+              <span className="text-red-600 font-medium">此操作不可撤销。</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
