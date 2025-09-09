@@ -126,7 +126,7 @@ def test_multiple_providers():
     测试多个提供商的 API key 验证
     """
     print("🚀 开始测试多个提供商的 validate_api_key() 函数...")
-    print("🎯 目标：openai、nvidia-nim、bce-qianfan")
+    print("🎯 目标：openai、siliconflow、nvidia-nim、bce-qianfan")
     print("=" * 60)
     
     # 0. 初始化加密系统
@@ -147,7 +147,7 @@ def test_multiple_providers():
     print("✅ 数据库配置正常")
     
     # 2. 测试目标提供商
-    target_providers = ["openai", "nvidia-nim", "bce-qianfan"]
+    target_providers = ["openai", "siliconflow", "nvidia-nim", "bce-qianfan"]
     results = {}
     
     print(f"\n2️⃣ 开始测试 {len(target_providers)} 个提供商...")
@@ -188,6 +188,11 @@ def test_error_handling():
             "provider": "openai",
             "fake_key": "sk-fake-invalid-key-12345",
             "base_url": "https://api.openai.com/v1"
+        },
+        {
+            "provider": "siliconflow",
+            "fake_key": "sk-fake-invalid-key-12345",
+            "base_url": "https://api.siliconflow.cn/v1"
         },
         {
             "provider": "nvidia-nim",

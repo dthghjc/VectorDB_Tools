@@ -1,5 +1,5 @@
 import qianfan
-from qianfan import QianfanError
+from qianfan.errors import QianfanError
 from .base import LLMClient
 from typing import List, Dict, Any, Tuple
 

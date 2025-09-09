@@ -1,5 +1,5 @@
 import ollama
-from ollama import OllamaError
+from ollama import RequestError
 from .base import LLMClient
 from typing import List, Dict, Any, Tuple
 
@@ -10,7 +10,7 @@ class OllamaClient(LLMClient):
             client = ollama.Client(host=self.base_url)
             client.models.list()
             return True, f"Successfully connected to Ollama at {self.base_url or 'default host'}."
-        except OllamaError as e:
+        except RequestError as e:
             # 捕获连接失败等特定请求错误
             return False, f"Failed to connect to Ollama at {self.base_url or 'default host'}. Is the service running? Error: {e.cause}"
         except Exception as e:
