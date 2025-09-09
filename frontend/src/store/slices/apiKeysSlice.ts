@@ -24,7 +24,7 @@ interface ApiKeysState {
     list: boolean;
     create: boolean;
     update: Record<string, boolean>; // 以 ID 为键的更新状态
-    delete: boolean;
+    delete: Record<string, boolean>; // 以 ID 为键的删除状态
     test: Record<string, boolean>; // 以 ID 为键的测试状态
   };
   
@@ -33,7 +33,7 @@ interface ApiKeysState {
     list: string | null;
     create: string | null;
     update: Record<string, string | null>; // 以 ID 为键的更新错误
-    delete: string | null;
+    delete: Record<string, string | null>; // 以 ID 为键的删除错误
     test: Record<string, string | null>; // 以 ID 为键的测试错误
   };
   
@@ -59,14 +59,14 @@ const initialState: ApiKeysState = {
     list: false,
     create: false,
     update: {},
-    delete: false,
+    delete: {},
     test: {},
   },
   error: {
     list: null,
     create: null,
     update: {},
-    delete: null,
+    delete: {},
     test: {},
   },
   stats: null,
@@ -207,7 +207,7 @@ const apiKeysSlice = createSlice({
         list: null,
         create: null,
         update: {},
-        delete: null,
+        delete: {},
         test: {},
       };
     },
@@ -298,12 +298,14 @@ const apiKeysSlice = createSlice({
 
     // 删除 API Key
     builder
-      .addCase(deleteApiKey.pending, (state) => {
-        state.loading.delete = true;
-        state.error.delete = null;
+      .addCase(deleteApiKey.pending, (state, action) => {
+        const apiKeyId = action.meta.arg;
+        state.loading.delete[apiKeyId] = true;
+        delete state.error.delete[apiKeyId];
       })
       .addCase(deleteApiKey.fulfilled, (state, action) => {
-        state.loading.delete = false;
+        const apiKeyId = action.payload;
+        delete state.loading.delete[apiKeyId];
         // 从列表中移除
         state.items = state.items.filter(item => item.id !== action.payload);
         state.total -= 1;
@@ -313,8 +315,9 @@ const apiKeysSlice = createSlice({
         }
       })
       .addCase(deleteApiKey.rejected, (state, action) => {
-        state.loading.delete = false;
-        state.error.delete = action.payload as string;
+        const apiKeyId = action.meta.arg;
+        delete state.loading.delete[apiKeyId];
+        state.error.delete[apiKeyId] = action.payload as string;
       });
 
     // 测试 API Key

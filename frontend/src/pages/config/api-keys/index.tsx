@@ -284,7 +284,7 @@ export default function ApiKeysPage() {
                     variant="destructive" 
                     size="sm"
                     onClick={() => handleDeleteClick(key)}
-                    disabled={loading.delete}
+                    disabled={loading.delete[key.id]}
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
                     删除
