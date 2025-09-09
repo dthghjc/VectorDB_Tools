@@ -46,6 +46,11 @@ class ApiKeyInDB(ApiKeyBase):
     status: str = Field(..., description="API Key 状态")
     last_used_at: Optional[datetime] = Field(None, description="最后使用时间")
     usage_count: int = Field(0, description="使用次数")
+    # 测试相关字段
+    last_tested_at: Optional[datetime] = Field(None, description="最后测试时间")
+    test_status: Optional[str] = Field(None, description="测试状态")
+    test_message: Optional[str] = Field(None, description="测试消息")
+    test_response_time: Optional[float] = Field(None, description="测试响应时间(ms)")
     created_at: datetime
     updated_at: datetime
 
@@ -88,6 +93,7 @@ class ApiKeyTestResponse(BaseModel):
     success: bool
     message: str
     response_time_ms: Optional[float] = None
+    tested_at: Optional[datetime] = None
     status_code: Optional[int] = None
 
 

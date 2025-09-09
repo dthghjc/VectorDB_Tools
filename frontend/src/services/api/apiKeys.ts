@@ -1,11 +1,13 @@
 // API Key 管理相关的 API 服务
 import { apiClient } from './index';
-import { rsaCrypto, encryptWithPublicKey } from '@/utils/crypto';
+import { encryptWithPublicKey } from '@/utils/crypto';
 import type { 
   ApiKey, 
   CreateApiKeyRequest, 
   CreateApiKeyResponse,
-  GetProvidersResponse
+  GetProvidersResponse,
+  TestApiKeyResponse,
+  ApiKeyListResponse
 } from '@/types/apiKeys';
 
 /**
@@ -15,15 +17,7 @@ interface RSAPublicKeyResponse {
   public_key: string;
 }
 
-/**
- * API Key 列表响应接口
- */
-interface ApiKeyListResponse {
-  items: ApiKey[];
-  total: number;
-  page: number;
-  size: number;
-}
+// 移除重复定义，使用 types/apiKeys.ts 中的定义
 
 /**
  * API Key 统计信息接口
@@ -35,21 +29,7 @@ interface ApiKeyStats {
   by_provider: Record<string, number>;
 }
 
-/**
- * API Key 测试请求接口
- */
-interface ApiKeyTestRequest {
-  test_prompt: string;
-}
-
-/**
- * API Key 测试响应接口
- */
-interface ApiKeyTestResponse {
-  success: boolean;
-  response_preview: string;
-  error_message?: string;
-}
+// 移除重复定义，使用 types/apiKeys.ts 中的定义
 
 /**
  * API Key 管理服务
@@ -145,8 +125,8 @@ export const apiKeyService = {
   /**
    * 测试 API Key 可用性
    */
-  test: async (id: string, testRequest: ApiKeyTestRequest): Promise<ApiKeyTestResponse> => {
-    const response = await apiClient.post<ApiKeyTestResponse>(`/keys/${id}/test`, testRequest);
+  test: async (id: string): Promise<TestApiKeyResponse> => {
+    const response = await apiClient.post<TestApiKeyResponse>(`/keys/${id}/test`);
     return response.data;
   },
 

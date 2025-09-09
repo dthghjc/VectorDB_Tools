@@ -33,6 +33,11 @@ export interface ApiKey {
   status: 'active' | 'inactive';
   last_used_at: string | null;
   usage_count: number;
+  // 测试相关字段
+  last_tested_at: string | null;
+  test_status: 'success' | 'failed' | null;
+  test_message: string | null;
+  test_response_time: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,4 +82,26 @@ export interface UpdateApiKeyRequest {
  */
 export interface GetProvidersResponse {
   providers: string[];
+}
+
+/**
+ * 测试 API Key 响应接口
+ */
+export interface TestApiKeyResponse {
+  success: boolean;
+  message: string;
+  response_time_ms: number | null;
+  tested_at: string | null;
+  status_code?: number;
+}
+
+/**
+ * 分页列表响应接口
+ */
+export interface ApiKeyListResponse {
+  items: ApiKey[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
 }

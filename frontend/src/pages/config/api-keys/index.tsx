@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Key, ArrowLeft, RefreshCw } from "lucide-react";
+import { Key, ArrowLeft, RefreshCw, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { fetchApiKeys, deleteApiKey, updateApiKey } from "@/store/slices/apiKeysSlice";
+import { fetchApiKeys, deleteApiKey, updateApiKey, testApiKey } from "@/store/slices/apiKeysSlice";
 import type { ApiKey } from "@/types/apiKeys";
 
 import AddApiKeyDialog from "@/components/features/config/AddApiKeyDialog";
@@ -45,6 +46,38 @@ export default function ApiKeysPage() {
   // 刷新列表
   const handleRefresh = () => {
     dispatch(fetchApiKeys({}));
+  };
+
+  // 测试 API Key
+  const handleTest = async (apiKey: ApiKey) => {
+    try {
+      const result = await dispatch(testApiKey(apiKey.id)).unwrap();
+      
+      if (result.success) {
+        toast.success("API Key 测试成功", {
+          description: `响应时间: ${result.response_time_ms?.toFixed(0)}ms`,
+          duration: 4000,
+        });
+      } else {
+        toast.error("API Key 测试失败", {
+          description: result.message,
+          duration: 6000,
+          action: {
+            label: "重试",
+            onClick: () => handleTest(apiKey)
+          }
+        });
+      }
+    } catch (error: any) {
+      toast.error("测试过程中发生错误", {
+        description: error.message || "未知错误",
+        duration: 6000,
+        action: {
+          label: "重试",
+          onClick: () => handleTest(apiKey)
+        }
+      });
+    }
   };
 
   return (
@@ -145,6 +178,36 @@ export default function ApiKeysPage() {
                       <span className="text-muted-foreground/70">创建于：</span>
                       <span className="font-medium">{new Date(key.created_at).toLocaleString()}</span>
                     </p>
+                    {/* 测试状态 */}
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground/70">最后测试：</span>
+                      <span className="font-medium">
+                        {key.last_tested_at 
+                          ? new Date(key.last_tested_at).toLocaleString()
+                          : '从未测试'
+                        }
+                      </span>
+                      {key.test_status && (
+                        <>
+                          <span className="mx-2">•</span>
+                          <span className={`font-medium inline-flex items-center gap-1 ${
+                            key.test_status === 'success' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {key.test_status === 'success' ? (
+                              <>
+                                <CheckCircle className="w-3 h-3" />
+                                正常
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="w-3 h-3" />
+                                异常
+                              </>
+                            )}
+                          </span>
+                        </>
+                      )}
+                    </p>
 
                   </div>
                 </div>
@@ -169,8 +232,23 @@ export default function ApiKeysPage() {
                     {key.status === 'active' ? '禁用' : '启用'}
                   </Button>
                   
-                  <Button variant="outline" size="sm">
-                    测试
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleTest(key)}
+                    disabled={loading.test[key.id]}
+                  >
+                    {loading.test[key.id] ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        测试中
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        测试
+                      </>
+                    )}
                   </Button>
 
                   <Button 

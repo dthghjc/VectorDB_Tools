@@ -3,12 +3,15 @@
 from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
 import logging
+import asyncio
+import threading
 from sqlalchemy.orm import Session
 
 from app.crud.api_key import api_key_crud
 from app.models.api_key import ApiKey
 from app.schemas.api_key import ApiKeyCreate, ApiKeyUpdate
 from app.llm_clients.factory import LLMClientFactory
+from app.core.db import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +75,10 @@ class ApiKeyService:
             api_key_obj = api_key_crud.create(
                 db=db, obj_in=api_key_data, user_id=user_id
             )
+            
+            # 异步测试新创建的 API Key（不阻塞响应）
+            logger.info(f"启动异步测试 - API Key: {api_key_obj.name}")
+            self.async_test_api_key(api_key_obj.id, user_id)
             
             # 返回安全信息
             return self._format_api_key_response(api_key_obj)
@@ -269,8 +276,9 @@ class ApiKeyService:
         *,
         api_key_id: UUID,
         user_id: UUID,
-        db: Session
-    ) -> Tuple[bool, str]:
+        db: Session,
+        save_result: bool = True
+    ) -> Tuple[bool, str, float | None]:
         """
         验证 API Key 是否有效
         
@@ -278,18 +286,26 @@ class ApiKeyService:
             api_key_id: API Key ID
             user_id: 用户 ID
             db: 数据库会话
+            save_result: 是否保存测试结果到数据库
             
         Returns:
-            (是否有效, 验证信息)
+            (是否有效, 验证信息, 响应时间ms)
         """
+        import time
+        start_time = time.time()
+        
         try:
             # 获取 API Key
             api_key_obj = api_key_crud.get(db=db, id=api_key_id, user_id=user_id)
             if not api_key_obj:
-                return False, "API Key 不存在或您无权访问"
+                return False, "API Key 不存在或您无权访问", None
             
             if not api_key_obj.is_active():
-                return False, "API Key 已被禁用"
+                response_time = (time.time() - start_time) * 1000
+                if save_result:
+                    api_key_obj.update_test_result(False, "API Key 已被禁用", response_time)
+                    db.commit()
+                return False, "API Key 已被禁用", response_time
             
             # 获取明文密钥
             plaintext_key = api_key_crud.get_plaintext_key(
@@ -304,17 +320,71 @@ class ApiKeyService:
             )
             
             is_valid, message = client.validate_api_key()
+            response_time = (time.time() - start_time) * 1000
+            
+            # 保存测试结果
+            if save_result:
+                api_key_obj.update_test_result(is_valid, message, response_time)
+                db.commit()
             
             if is_valid:
                 logger.info(f"API Key 验证成功: {api_key_obj.name}")
             else:
                 logger.warning(f"API Key 验证失败: {api_key_obj.name}, 原因: {message}")
             
-            return is_valid, message
+            return is_valid, message, response_time
             
         except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            error_message = f"验证过程中发生错误: {str(e)}"
+            
+            # 保存错误结果
+            if save_result:
+                try:
+                    api_key_obj = api_key_crud.get(db=db, id=api_key_id, user_id=user_id)
+                    if api_key_obj:
+                        api_key_obj.update_test_result(False, error_message, response_time)
+                        db.commit()
+                except:
+                    pass  # 避免在保存错误时再次出错
+            
             logger.error(f"API Key 验证过程中发生错误: {e}", exc_info=True)
-            return False, f"验证过程中发生错误: {str(e)}"
+            return False, error_message, response_time
+    
+    def async_test_api_key(self, api_key_id: UUID, user_id: UUID) -> None:
+        """
+        异步测试 API Key（后台任务）
+        
+        Args:
+            api_key_id: API Key ID
+            user_id: 用户 ID
+        """
+        def test_in_background():
+            try:
+                # 创建新的数据库会话用于后台任务
+                from app.core.db import SessionLocal
+                db = SessionLocal()
+                
+                try:
+                    # 执行测试（保存结果到数据库）
+                    is_valid, message, response_time = self.validate_api_key(
+                        api_key_id=api_key_id,
+                        user_id=user_id,
+                        db=db,
+                        save_result=True
+                    )
+                    
+                    logger.info(f"异步测试完成 - API Key: {api_key_id}, 结果: {'成功' if is_valid else '失败'}")
+                    
+                finally:
+                    db.close()
+                    
+            except Exception as e:
+                logger.error(f"异步测试 API Key 失败: {e}", exc_info=True)
+        
+        # 在后台线程中执行测试
+        thread = threading.Thread(target=test_in_background, daemon=True)
+        thread.start()
     
     def get_user_stats(
         self,
@@ -363,6 +433,11 @@ class ApiKeyService:
             "status": api_key_obj.status,
             "last_used_at": api_key_obj.last_used_at,  # 保持 datetime 类型
             "usage_count": api_key_obj.usage_count,
+            # 测试相关字段
+            "last_tested_at": api_key_obj.last_tested_at,
+            "test_status": api_key_obj.test_status,
+            "test_message": api_key_obj.test_message,
+            "test_response_time": api_key_obj.test_response_time,
             "created_at": api_key_obj.created_at,      # 保持 datetime 类型
             "updated_at": api_key_obj.updated_at       # 保持 datetime 类型
         }

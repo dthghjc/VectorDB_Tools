@@ -371,19 +371,19 @@ async def test_api_key(
     
     try:
         # 使用服务层的统一验证方法
-        is_valid, message = api_key_service.validate_api_key(
+        is_valid, message, response_time = api_key_service.validate_api_key(
             api_key_id=key_id,
             user_id=current_user.id,
-            db=db
+            db=db,
+            save_result=True  # 保存测试结果
         )
         
-        # 计算响应时间
-        response_time = (time.time() - start_time) * 1000
-        
+        from datetime import datetime
         return schemas.ApiKeyTestResponse(
             success=is_valid,
             message=message,
-            response_time_ms=round(response_time, 2)
+            response_time_ms=round(response_time, 2) if response_time else None,
+            tested_at=datetime.utcnow()
         )
             
     except Exception as e:

@@ -3,8 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { apiKeyService } from '@/services/api/apiKeys';
 import type { 
   ApiKey, 
-  CreateApiKeyRequest, 
-  CreateApiKeyResponse 
+  CreateApiKeyRequest
 } from '@/types/apiKeys';
 
 /**
@@ -26,7 +25,7 @@ interface ApiKeysState {
     create: boolean;
     update: boolean;
     delete: boolean;
-    test: boolean;
+    test: Record<string, boolean>; // 以 ID 为键的测试状态
   };
   
   // 错误状态
@@ -35,7 +34,7 @@ interface ApiKeysState {
     create: string | null;
     update: string | null;
     delete: string | null;
-    test: string | null;
+    test: Record<string, string | null>; // 以 ID 为键的测试错误
   };
   
   // 统计信息
@@ -61,14 +60,14 @@ const initialState: ApiKeysState = {
     create: false,
     update: false,
     delete: false,
-    test: false,
+    test: {},
   },
   error: {
     list: null,
     create: null,
     update: null,
     delete: null,
-    test: null,
+    test: {},
   },
   stats: null,
 };
@@ -170,6 +169,22 @@ export const fetchApiKeyStats = createAsyncThunk(
 );
 
 /**
+ * 测试 API Key
+ */
+export const testApiKey = createAsyncThunk(
+  'apiKeys/test',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await apiKeyService.test(id);
+      return { id, ...response };
+    } catch (error: any) {
+      const message = error.response?.data?.detail || error.message || 'API Key 测试失败';
+      return rejectWithValue({ id, message });
+    }
+  }
+);
+
+/**
  * API Keys Slice
  */
 const apiKeysSlice = createSlice({
@@ -178,14 +193,23 @@ const apiKeysSlice = createSlice({
   reducers: {
     // 清除特定错误
     clearError: (state, action: PayloadAction<keyof ApiKeysState['error']>) => {
-      state.error[action.payload] = null;
+      const key = action.payload;
+      if (key === 'test') {
+        state.error.test = {};
+      } else {
+        (state.error as any)[key] = null;
+      }
     },
     
     // 清除所有错误
     clearAllErrors: (state) => {
-      Object.keys(state.error).forEach((key) => {
-        state.error[key as keyof typeof state.error] = null;
-      });
+      state.error = {
+        list: null,
+        create: null,
+        update: null,
+        delete: null,
+        test: {},
+      };
     },
     
     // 重置状态
@@ -209,6 +233,10 @@ const apiKeysSlice = createSlice({
         const newItem: ApiKey = {
           ...action.payload,
           last_used_at: null, // 新创建的密钥从未使用
+          last_tested_at: null,
+          test_status: null,
+          test_message: null,
+          test_response_time: null,
         };
         state.items.unshift(newItem);
         state.total += 1;
@@ -284,6 +312,32 @@ const apiKeysSlice = createSlice({
       .addCase(deleteApiKey.rejected, (state, action) => {
         state.loading.delete = false;
         state.error.delete = action.payload as string;
+      });
+
+    // 测试 API Key
+    builder
+      .addCase(testApiKey.pending, (state, action) => {
+        const id = action.meta.arg;
+        state.loading.test[id] = true;
+        state.error.test[id] = null;
+      })
+      .addCase(testApiKey.fulfilled, (state, action) => {
+        const { id, success, message, response_time_ms, tested_at } = action.payload;
+        state.loading.test[id] = false;
+        
+        // 更新对应的 API Key 测试结果
+        const apiKey = state.items.find(item => item.id === id);
+        if (apiKey) {
+          apiKey.last_tested_at = tested_at;
+          apiKey.test_status = success ? 'success' : 'failed';
+          apiKey.test_message = message;
+          apiKey.test_response_time = response_time_ms;
+        }
+      })
+      .addCase(testApiKey.rejected, (state, action) => {
+        const payload = action.payload as { id: string; message: string };
+        state.loading.test[payload.id] = false;
+        state.error.test[payload.id] = payload.message;
       });
 
     // 获取统计信息

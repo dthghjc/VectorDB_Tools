@@ -89,6 +89,30 @@ class ApiKey(Base, TimestampMixin):
         comment="API Key 的累计使用次数"
     )
     
+    # 测试相关字段
+    last_tested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="最后一次测试该 API Key 的时间"
+    )
+    
+    test_status: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="最后一次测试状态：success(成功) 或 failed(失败)"
+    )
+    
+    test_message: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="最后一次测试的详细信息或错误消息"
+    )
+    
+    test_response_time: Mapped[float | None] = mapped_column(
+        nullable=True,
+        comment="最后一次测试的响应时间（毫秒）"
+    )
+    
     # 数据库约束
     __table_args__ = (
         # 同一用户下的 API Key 名称不能重复
@@ -124,6 +148,20 @@ class ApiKey(Base, TimestampMixin):
         """
         self.last_used_at = datetime.utcnow()
         self.usage_count += 1
+    
+    def update_test_result(self, success: bool, message: str, response_time: float | None = None) -> None:
+        """
+        更新测试结果
+        
+        Args:
+            success: 测试是否成功
+            message: 测试消息
+            response_time: 响应时间（毫秒），可选
+        """
+        self.last_tested_at = datetime.utcnow()
+        self.test_status = "success" if success else "failed"
+        self.test_message = message
+        self.test_response_time = response_time
     
     def is_active(self) -> bool:
         """检查 API Key 是否处于启用状态"""
