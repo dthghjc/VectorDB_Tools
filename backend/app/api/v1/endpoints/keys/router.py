@@ -14,13 +14,9 @@ from app.models.user import User
 from app.schemas.crypto import RSAPublicKeyResponse
 from app.schemas import api_key as schemas
 from app.schemas.api_key import ApiProvider
-from app.crud.api_key import api_key_crud
 from app.services.api_key_service import api_key_service, ApiKeyServiceError
 
 import logging
-
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -106,15 +102,15 @@ async def create_api_key(
         )
         
         return schemas.ApiKeyCreateResponse(
-            id=UUID(api_key_data["id"]),
+            id=api_key_data["id"],
             name=api_key_data["name"],
             provider=api_key_data["provider"],
             base_url=api_key_data["base_url"],
             key_preview=api_key_data["key_preview"],
             status=api_key_data["status"],
             usage_count=api_key_data["usage_count"],
-            created_at=datetime.fromisoformat(api_key_data["created_at"]),
-            updated_at=datetime.fromisoformat(api_key_data["updated_at"])
+            created_at=api_key_data["created_at"],
+            updated_at=api_key_data["updated_at"]
         )
         
     except ApiKeyServiceError as e:
@@ -140,8 +136,8 @@ async def create_api_key(
 async def get_api_keys(
     *,
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="跳过数量"),
-    limit: int = Query(20, ge=1, le=100, description="每页数量"),
+    page: int = Query(1, ge=1, description="页码"),
+    size: int = Query(20, ge=1, le=100, description="每页数量"),
     provider: Optional[str] = Query(None, description="按提供商过滤"),
     status: Optional[str] = Query(None, regex="^(active|inactive)$", description="按状态过滤"),
     current_user: User = Depends(get_current_active_user)
@@ -150,8 +146,8 @@ async def get_api_keys(
     获取当前用户的 API Key 列表
     
     Args:
-        skip: 跳过数量
-        limit: 每页数量
+        page: 页码（从1开始）
+        size: 每页数量
         provider: 按提供商过滤
         status: 按状态过滤
         current_user: 当前用户
@@ -160,8 +156,10 @@ async def get_api_keys(
         分页的 API Key 列表
     """
     
-    
     try:
+        # 将页码转换为 skip
+        skip = (page - 1) * size
+        
         # 使用服务层获取 API Key 列表
         result = api_key_service.get_user_api_keys(
             user_id=current_user.id,
@@ -169,16 +167,16 @@ async def get_api_keys(
             provider=provider,
             status=status,
             skip=skip,
-            limit=limit
+            limit=size
         )
         
-        pages = (result["total"] + limit - 1) // limit  # 向上取整
+        pages = (result["total"] + size - 1) // size  # 向上取整
         
         return schemas.ApiKeyList(
-            items=[schemas.ApiKeyResponse(**item) for item in result["items"]],
+            items=[schemas.ApiKeyResponse.model_validate(item) for item in result["items"]],
             total=result["total"],
-            page=skip // limit + 1,
-            size=limit,
+            page=page,
+            size=size,
             pages=pages
         )
         
@@ -210,14 +208,33 @@ async def get_api_key(
     Raises:
         HTTPException: 当 API Key 不存在时
     """
-    api_key = api_key_crud.get(db, id=key_id, user_id=current_user.id)
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="API Key 不存在"
+    try:
+        # 使用服务层获取 API Key
+        api_key_data = api_key_service.get_api_key(
+            api_key_id=key_id,
+            user_id=current_user.id,
+            db=db
         )
-    
-    return schemas.ApiKeyResponse.model_validate(api_key)
+        
+        return schemas.ApiKeyResponse.model_validate(api_key_data)
+        
+    except ApiKeyServiceError as e:
+        if e.error_code == "NOT_FOUND":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=e.message
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=e.message
+            )
+    except Exception as e:
+        logger.error(f"获取 API Key 失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取 API Key 失败"
+        )
 
 
 @router.put("/{key_id}", summary="更新 API Key", response_model=schemas.ApiKeyResponse)
@@ -242,27 +259,39 @@ async def update_api_key(
     Raises:
         HTTPException: 当 API Key 不存在或名称冲突时
     """
-    # 获取原 API Key
-    api_key = api_key_crud.get(db, id=key_id, user_id=current_user.id)
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="API Key 不存在"
+    try:
+        # 使用服务层更新 API Key
+        updated_data = api_key_service.update_api_key(
+            api_key_id=key_id,
+            user_id=current_user.id,
+            update_data=api_key_in,
+            db=db
         )
-    
-    # 检查名称冲突（如果更新了名称）
-    if api_key_in.name and api_key_in.name != api_key.name:
-        existing = api_key_crud.get_by_name(db, name=api_key_in.name, user_id=current_user.id)
-        if existing:
+        
+        return schemas.ApiKeyResponse.model_validate(updated_data)
+        
+    except ApiKeyServiceError as e:
+        if e.error_code == "NOT_FOUND":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=e.message
+            )
+        elif e.error_code == "DUPLICATE_NAME":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"API Key 名称 '{api_key_in.name}' 已存在"
+                detail=e.message
             )
-    
-    # 更新 API Key
-    updated_api_key = api_key_crud.update(db, db_obj=api_key, obj_in=api_key_in)
-    
-    return schemas.ApiKeyResponse.model_validate(updated_api_key)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=e.message
+            )
+    except Exception as e:
+        logger.error(f"更新 API Key 失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="更新 API Key 失败"
+        )
 
 
 @router.delete("/{key_id}", summary="删除 API Key")
@@ -285,15 +314,33 @@ async def delete_api_key(
     Raises:
         HTTPException: 当 API Key 不存在时
     """
-    success = api_key_crud.delete(db, id=key_id, user_id=current_user.id)
-    
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="API Key 不存在"
+    try:
+        # 使用服务层删除 API Key
+        success = api_key_service.delete_api_key(
+            api_key_id=key_id,
+            user_id=current_user.id,
+            db=db
         )
-    
-    return {"message": "API Key 删除成功", "id": str(key_id)}
+        
+        return {"message": "API Key 删除成功", "id": str(key_id)}
+        
+    except ApiKeyServiceError as e:
+        if e.error_code == "NOT_FOUND":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=e.message
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=e.message
+            )
+    except Exception as e:
+        logger.error(f"删除 API Key 失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="删除 API Key 失败"
+        )
 
 
 @router.post("/{key_id}/test", summary="测试 API Key", response_model=schemas.ApiKeyTestResponse)
@@ -319,22 +366,6 @@ async def test_api_key(
     Raises:
         HTTPException: 当 API Key 不存在时
     """
-    
-    
-    # 获取 API Key（包含权限验证）
-    api_key = api_key_crud.get(db, id=key_id, user_id=current_user.id)
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="API Key 不存在"
-        )
-    
-    if not api_key.is_active():
-        return schemas.ApiKeyTestResponse(
-            success=False,
-            message="API Key 已被禁用，请先启用后再测试"
-        )
-    
     # 记录开始时间
     start_time = time.time()
     
@@ -349,21 +380,11 @@ async def test_api_key(
         # 计算响应时间
         response_time = (time.time() - start_time) * 1000
         
-        if is_valid:
-            # 更新使用统计（仅在验证成功时）
-            api_key_crud.update_usage(db, db_obj=api_key)
-            
-            return schemas.ApiKeyTestResponse(
-                success=True,
-                message=message,
-                response_time_ms=round(response_time, 2)
-            )
-        else:
-            return schemas.ApiKeyTestResponse(
-                success=False,
-                message=message,
-                response_time_ms=round(response_time, 2)
-            )
+        return schemas.ApiKeyTestResponse(
+            success=is_valid,
+            message=message,
+            response_time_ms=round(response_time, 2)
+        )
             
     except Exception as e:
         response_time = (time.time() - start_time) * 1000
@@ -391,4 +412,21 @@ async def get_api_key_stats(
     Returns:
         统计信息
     """
-    return api_key_crud.get_user_stats(db, user_id=current_user.id)
+    try:
+        # 使用服务层获取统计信息
+        return api_key_service.get_user_stats(
+            user_id=current_user.id,
+            db=db
+        )
+        
+    except ApiKeyServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message
+        )
+    except Exception as e:
+        logger.error(f"获取统计信息失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="获取统计信息失败"
+        )

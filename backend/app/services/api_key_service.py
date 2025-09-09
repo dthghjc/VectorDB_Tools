@@ -354,16 +354,17 @@ class ApiKeyService:
             格式化的响应数据
         """
         return {
-            "id": str(api_key_obj.id),
+            "id": api_key_obj.id,                # 保持 UUID 类型
+            "user_id": api_key_obj.user_id,      # 添加缺失的 user_id
             "name": api_key_obj.name,
             "provider": api_key_obj.provider,
             "base_url": api_key_obj.base_url,
             "key_preview": api_key_obj.key_preview,
             "status": api_key_obj.status,
-            "last_used_at": api_key_obj.last_used_at.isoformat() if api_key_obj.last_used_at else None,
+            "last_used_at": api_key_obj.last_used_at,  # 保持 datetime 类型
             "usage_count": api_key_obj.usage_count,
-            "created_at": api_key_obj.created_at.isoformat(),
-            "updated_at": api_key_obj.updated_at.isoformat()
+            "created_at": api_key_obj.created_at,      # 保持 datetime 类型
+            "updated_at": api_key_obj.updated_at       # 保持 datetime 类型
         }
 
 

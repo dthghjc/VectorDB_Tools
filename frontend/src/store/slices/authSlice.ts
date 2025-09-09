@@ -24,6 +24,7 @@ export interface AuthState {
   user: User | null;          // 当前登录用户信息
   token: string | null;       // JWT访问令牌
   isAuthenticated: boolean;   // 是否已认证
+  isInitialized: boolean;     // 认证状态是否已初始化（防止刷新时误重定向）
   isLoading: boolean;         // 是否正在加载（登录/注册/获取用户信息等）
   error: string | null;       // 错误信息
 }
@@ -159,6 +160,7 @@ const initialState: AuthState = {
   user: null,                                    // 初始无用户信息
   token: null,                                   // 初始无token（将通过setAuthFromStorage恢复）
   isAuthenticated: false,                        // 初始未认证状态
+  isInitialized: false,                          // 初始未初始化状态
   isLoading: false,                              // 初始无加载状态
   error: null,                                   // 初始无错误
 };
@@ -308,6 +310,7 @@ const authSlice = createSlice({
       
       if (!token) {
         console.log('⚠️ [Auth] 本地存储无token');
+        state.isInitialized = true;  // 标记初始化完成，即使没有token
         return;
       }
       
@@ -317,6 +320,7 @@ const authSlice = createSlice({
         console.log('✅ [Auth] 从本地存储恢复认证状态成功');
         state.token = token;
         state.isAuthenticated = true;
+        state.isInitialized = true;  // 标记初始化完成
         
         // 同时恢复用户信息
         const user = storageManager.getUser();
@@ -327,6 +331,7 @@ const authSlice = createSlice({
       } else {
         console.log('❌ [Auth] 本地存储的token无效，清除');
         storageManager.clear();
+        state.isInitialized = true;  // 标记初始化完成，即使token无效
       }
     }
   },
@@ -352,6 +357,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.access_token;
         state.isAuthenticated = true;
+        state.isInitialized = true;  // 登录成功后标记已初始化
         state.error = null;
         
         // 根据登录响应创建用户对象（包含所有需要的信息）
@@ -415,12 +421,13 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         console.log('✅ [Auth] 退出登录成功，重置所有状态');
         
-        // 重置所有认证相关状态
+        // 重置所有认证相关状态，但保持已初始化状态
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
         state.error = null;
         state.isLoading = false;
+        // isInitialized 保持 true，因为认证系统已经初始化过了
       });
   },
 });

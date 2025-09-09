@@ -1,11 +1,12 @@
 import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { loginUser, clearError } from "@/store/slices/authSlice"
 import { LoginForm, type LoginFormData } from "@/components/features/auth/login-form"
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useAppDispatch()
   const { isLoading, error, isAuthenticated } = useAppSelector(state => state.auth)
 
@@ -14,12 +15,15 @@ export default function LoginPage() {
     dispatch(clearError())
   }, [dispatch])
 
-  // 页面级副作用：登录成功后重定向
+  // 页面级副作用：登录成功后重定向到原来的页面或首页
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true })
+      // 获取重定向目标：原来的页面或默认首页
+      const from = location.state?.from?.pathname || '/'
+      console.log('登录成功，重定向到:', from)
+      navigate(from, { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, location.state])
 
   // 页面级业务逻辑：处理登录提交
   const handleSubmit = async (data: LoginFormData) => {

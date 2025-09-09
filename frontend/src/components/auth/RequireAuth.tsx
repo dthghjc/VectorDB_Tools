@@ -18,7 +18,19 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children, allowed, redirectTo }: RequireAuthProps) {
   const location = useLocation();
-  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const { isAuthenticated, isInitialized } = useAppSelector(state => state.auth);
+
+  // 如果认证状态尚未初始化，显示加载状态而不是重定向
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">正在验证身份...</p>
+        </div>
+      </div>
+    );
+  }
 
   // 根据allowed参数和当前认证状态决定是否允许访问
   if (allowed && !isAuthenticated) {
