@@ -60,21 +60,6 @@ export default function ConfigPage() {
           </div>
         </Card>
       </div>
-
-      {/* 快速状态检查 */}
-      <Card className="p-6">
-        <div className="flex items-center space-x-4">
-          <div className="bg-green-100 p-3 rounded-lg">
-            <Settings2 className="h-6 w-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">系统状态</h3>
-            <p className="text-sm text-muted-foreground">
-              所有配置项状态正常 • 最后检查：刚刚
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
