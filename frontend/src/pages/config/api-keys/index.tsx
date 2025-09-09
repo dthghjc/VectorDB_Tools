@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Key, ArrowLeft, RefreshCw, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { Key, ArrowLeft, RefreshCw, CheckCircle, Loader2, AlertCircle, Power, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -227,8 +227,9 @@ export default function ApiKeysPage() {
                     variant="outline" 
                     size="sm"
                     onClick={() => handleToggleStatus(key)}
-                    disabled={loading.update}
+                    disabled={loading.update[key.id]}
                   >
+                    <Power className="w-3 h-3 mr-1" />
                     {key.status === 'active' ? '禁用' : '启用'}
                   </Button>
                   
@@ -257,6 +258,7 @@ export default function ApiKeysPage() {
                     onClick={() => handleDelete(key)}
                     disabled={loading.delete}
                   >
+                    <Trash2 className="w-3 h-3 mr-1" />
                     删除
                   </Button>
                 </div>
