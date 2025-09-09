@@ -1,6 +1,7 @@
 import qianfan
+from qianfan import QianfanError
 from .base import LLMClient
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 class BaiduQianfanClient(LLMClient):
     """百度千帆 Embedding 模型的具体实现"""
@@ -14,6 +15,20 @@ class BaiduQianfanClient(LLMClient):
                 raise ValueError
         except (ValueError, IndexError):
             raise ValueError("Baidu Qianfan API key format is invalid. Expected 'api_key:secret_key'.")
+        
+    def validate_api_key(self) -> Tuple[bool, str]:
+        try:
+            qianfan.Models.list(ak=self.ak, sk=self.sk)
+            return True, "Baidu Qianfan AK/SK pair is valid."
+        except QianfanError as e:
+            # 捕获千帆的特定API异常
+            # 常见的认证错误码是 110 (Invalid Access Key Id) 和 111 (Secret Key doesn't match)
+            if e.error_code in [110, 111]:
+                return False, f"AK or SK is invalid: (code: {e.error_code}) {e.error_msg}"
+            return False, f"Qianfan API error: (code: {e.error_code}) {e.error_msg}"
+        except Exception as e:
+            return False, f"An unexpected error occurred: {e}"
+        
 
     def create_embeddings(self, texts: List[str], options: Dict[str, Any]) -> List[List[float]]:
         model = options.get("model")

@@ -1,4 +1,4 @@
-# app/services/your_embedding_service.py (示例)
+# app/services/embedding_service.py
 
 from app.llm_clients.factory import LLMClientFactory
 

@@ -1,12 +1,26 @@
-from openai import OpenAI
+from openai import OpenAI, AuthenticationError
 from .base import LLMClient
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 class OpenAIClient(LLMClient):
     """
     OpenAI Embedding API 的具体实现.
-    同样适用于 硅基流动 (SiliconFlow) 等 OpenAI 兼容的 API.
+    同样适用于 硅基流动 (SiliconFlow)、NVIDIA NIM 等 OpenAI 兼容的 API.
     """
+    def validate_api_key(self) -> Tuple[bool, str]:
+        try:
+            client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+            client.models.list()
+            #打印模型
+            print(client.models.list())
+            return True, "API key is valid."
+        except AuthenticationError as e:
+            # 捕获专门的认证失败异常
+            return False, f"API key is invalid or expired: {e.__cause__}"
+        except Exception as e:
+            # 捕获其他异常，如网络连接问题
+            return False, f"An error occurred: {e}"
+    
     def create_embeddings(self, texts: List[str], options: Dict[str, Any]) -> List[List[float]]:
         client = OpenAI(
             api_key=self.api_key,

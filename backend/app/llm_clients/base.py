@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 class LLMClient(ABC):
     """
@@ -20,5 +20,12 @@ class LLMClient(ABC):
 
         Returns:
             一个包含多个 embedding 向量的列表, e.g., [[0.1, 0.2, ...], [0.3, 0.4, ...]]
+        """
+        pass
+    
+    @abstractmethod
+    def validate_api_key(self) -> Tuple[bool, str]:
+        """
+        验证 API Key 是否有效。
         """
         pass
