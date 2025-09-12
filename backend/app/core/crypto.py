@@ -98,6 +98,15 @@ class RSAKeyManager:
         try:
             # 解码 Base64
             encrypted_bytes = base64.b64decode(encrypted_data)
+            logger.debug(f"RSA 解密：密文长度 = {len(encrypted_bytes)} bytes")
+            logger.debug(f"RSA 解密：私钥大小 = {self.private_key.key_size // 8} bytes")
+            
+            # 检查密文长度是否与密钥大小匹配
+            expected_length = self.private_key.key_size // 8
+            if len(encrypted_bytes) != expected_length:
+                raise ValueError(
+                    f"密文长度不匹配：期望 {expected_length} bytes，实际 {len(encrypted_bytes)} bytes"
+                )
             
             # RSA 解密
             decrypted_bytes = self.private_key.decrypt(
@@ -113,6 +122,9 @@ class RSAKeyManager:
             
         except Exception as e:
             logger.error(f"RSA 解密失败: {e}")
+            logger.error(f"输入数据长度: {len(encrypted_data)} chars")
+            if hasattr(e, '__class__'):
+                logger.error(f"错误类型: {e.__class__.__name__}")
             raise
     
     def get_public_key_pem(self) -> str:
@@ -289,6 +301,21 @@ def decrypt_api_key(encrypted_key: str) -> str:
     if not aes_crypto:
         raise RuntimeError("加密系统未初始化，请先调用 initialize_crypto()")
     return aes_crypto.decrypt(encrypted_key)
+
+
+def decrypt_rsa(encrypted_data: str) -> str:
+    """
+    解密前端 RSA 加密的数据
+    
+    Args:
+        encrypted_data: 前端 RSA 加密的 Base64 数据
+        
+    Returns:
+        解密后的原始字符串
+    """
+    if not rsa_manager:
+        raise RuntimeError("加密系统未初始化，请先调用 initialize_crypto()")
+    return rsa_manager.decrypt_rsa(encrypted_data)
 
 
 def encrypt_sensitive_data(data: str) -> str:

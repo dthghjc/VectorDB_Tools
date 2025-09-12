@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { createApiKey, clearError } from "@/store/slices/apiKeysSlice";
-import { validateApiKeyForm, type ApiKeyValidationErrors } from "@/utils/validation";
+import { validateApiKeyForm, validateApiKeyField, type ApiKeyValidationErrors } from "@/utils/validation";
 import { apiKeyService } from "@/services/api/apiKeys";
 import { transformProvidersToOptions } from "@/constants/providers";
 import {
@@ -79,9 +79,42 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
     }
   }, [isOpen]);
 
+  // 处理表单字段变化（带实时验证）
+  const handleInputChange = (field: keyof ApiKeyValidationErrors, value: string) => {
+    // 更新字段值
+    switch (field) {
+      case 'name':
+        setName(value);
+        break;
+      case 'provider':
+        setProvider(value);
+        break;
+      case 'apiKey':
+        setApiKey(value);
+        break;
+      case 'baseUrl':
+        setBaseUrl(value);
+        break;
+    }
+    
+    // 实时验证：当用户修改字段时立即验证该字段
+    const formData = { 
+      name: field === 'name' ? value : name,
+      provider: field === 'provider' ? value : provider,
+      apiKey: field === 'apiKey' ? value : apiKey,
+      baseUrl: field === 'baseUrl' ? value : baseUrl
+    };
+    
+    const fieldError = validateApiKeyField(field, value, formData);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: fieldError
+    }));
+  };
+
   // 处理供应商选择变化
   const handleProviderChange = (selectedProvider: string) => {
-    setProvider(selectedProvider);
+    handleInputChange('provider', selectedProvider);
   };
 
   // 检查表单是否完整且有效
@@ -171,7 +204,7 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder={t('addApiKeyDialog.namePlaceholder')}
                   className={validationErrors.name ? "border-red-500" : ""}
                   required
@@ -225,7 +258,7 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
                   id="apiKey"
                   type="password"
                   value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  onChange={(e) => handleInputChange('apiKey', e.target.value)}
                   placeholder={t('addApiKeyDialog.apiKeyPlaceholder')}
                   className={validationErrors.apiKey ? "border-red-500" : ""}
                   required
@@ -244,7 +277,7 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
                 <Input
                   id="baseUrl"
                   value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
+                  onChange={(e) => handleInputChange('baseUrl', e.target.value)}
                   placeholder={t('addApiKeyDialog.baseUrlPlaceholder')}
                   className={validationErrors.baseUrl ? "border-red-500" : ""}
                   required

@@ -92,8 +92,7 @@ async def create_milvus_connection(
             host=connection_data["host"],
             port=connection_data["port"],
             database_name=connection_data["database_name"],
-            username_preview=connection_data["username_preview"],
-            secure=connection_data["secure"],
+            username=connection_data["username"],
             status=connection_data["status"],
             usage_count=connection_data["usage_count"],
             connection_string=connection_data["connection_string"],
@@ -127,7 +126,6 @@ async def get_milvus_connections(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     status: Optional[str] = Query(None, regex="^(active|inactive)$", description="按状态过滤"),
-    secure: Optional[bool] = Query(None, description="按安全连接过滤"),
     current_user: User = Depends(get_current_active_user)
 ) -> schemas.MilvusConnectionList:
     """
@@ -137,7 +135,6 @@ async def get_milvus_connections(
         page: 页码（从1开始）
         size: 每页数量
         status: 按状态过滤
-        secure: 按安全连接过滤
         current_user: 当前用户
         
     Returns:
@@ -152,7 +149,6 @@ async def get_milvus_connections(
             user_id=current_user.id,
             db=db,
             status=status,
-            secure=secure,
             skip=skip,
             limit=size
         )

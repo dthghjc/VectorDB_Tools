@@ -4,41 +4,74 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, Field, ConfigDict, validator
+from urllib.parse import urlparse
 
 
 class MilvusConnectionBase(BaseModel):
     """Milvus 连接配置基础模式"""
     name: str = Field(..., min_length=1, max_length=255, description="连接配置名称")
     description: Optional[str] = Field(None, max_length=500, description="连接配置描述")
-    host: str = Field(..., min_length=1, max_length=255, description="Milvus 服务器主机地址")
+    host: str = Field(..., min_length=1, max_length=500, description="Milvus 服务器完整URL（含协议）")
     port: int = Field(19530, ge=1, le=65535, description="Milvus 服务器端口")
-    database_name: Optional[str] = Field(None, max_length=255, description="数据库名称（可选）")
-    secure: bool = Field(False, description="是否使用 TLS/SSL 安全连接")
+    database_name: str = Field(..., min_length=1, max_length=255, description="数据库名称（必填）")
+    
+    @validator('host')
+    def validate_host_url(cls, v):
+        """验证主机地址必须是完整的 URL"""
+        if not v:
+            raise ValueError('主机地址不能为空')
+        
+        try:
+            parsed = urlparse(v)
+            if not parsed.scheme or not parsed.netloc:
+                raise ValueError('主机地址必须是完整的 URL，包含协议（如 http://localhost 或 https://example.com）')
+            if parsed.scheme not in ['http', 'https']:
+                raise ValueError('协议必须是 http 或 https')
+            if parsed.port:
+                raise ValueError('请将端口在单独的端口字段中填写，主机地址中不要包含端口')
+        except Exception as e:
+            if isinstance(e, ValueError):
+                raise e
+            raise ValueError(f'无效的 URL 格式: {str(e)}')
+        
+        return v
 
 
 class MilvusConnectionCreate(MilvusConnectionBase):
     """创建 Milvus 连接请求模式"""
-    encrypted_username: Optional[str] = Field(None, description="前端 RSA 加密后的用户名（可选）")
-    encrypted_password: Optional[str] = Field(None, description="前端 RSA 加密后的密码（可选）")
-    
-    @validator('encrypted_password')
-    def validate_auth_pair(cls, v, values):
-        """验证认证信息必须成对出现"""
-        username = values.get('encrypted_username')
-        if bool(username) != bool(v):
-            raise ValueError('用户名和密码必须同时提供或同时为空')
-        return v
+    encrypted_username: str = Field(..., description="前端 RSA 加密后的用户名（必填）")
+    encrypted_password: str = Field(..., description="前端 RSA 加密后的密码（必填）")
 
 
 class MilvusConnectionUpdate(BaseModel):
     """更新 Milvus 连接请求模式"""
     name: Optional[str] = Field(None, min_length=1, max_length=255, description="连接配置名称")
     description: Optional[str] = Field(None, max_length=500, description="连接配置描述")
-    host: Optional[str] = Field(None, min_length=1, max_length=255, description="Milvus 服务器主机地址")
+    host: Optional[str] = Field(None, min_length=1, max_length=500, description="Milvus 服务器完整URL")
     port: Optional[int] = Field(None, ge=1, le=65535, description="Milvus 服务器端口")
-    database_name: Optional[str] = Field(None, max_length=255, description="数据库名称")
-    secure: Optional[bool] = Field(None, description="是否使用 TLS/SSL 安全连接")
+    database_name: Optional[str] = Field(None, min_length=1, max_length=255, description="数据库名称")
     status: Optional[str] = Field(None, pattern="^(active|inactive)$", description="连接状态")
+    
+    @validator('host')
+    def validate_host_url(cls, v):
+        """验证主机地址必须是完整的 URL"""
+        if v is None:
+            return v
+            
+        try:
+            parsed = urlparse(v)
+            if not parsed.scheme or not parsed.netloc:
+                raise ValueError('主机地址必须是完整的 URL，包含协议（如 http://localhost 或 https://example.com）')
+            if parsed.scheme not in ['http', 'https']:
+                raise ValueError('协议必须是 http 或 https')
+            if parsed.port:
+                raise ValueError('请将端口在单独的端口字段中填写，主机地址中不要包含端口')
+        except Exception as e:
+            if isinstance(e, ValueError):
+                raise e
+            raise ValueError(f'无效的 URL 格式: {str(e)}')
+        
+        return v
 
 
 class MilvusConnectionInDB(MilvusConnectionBase):
@@ -47,7 +80,7 @@ class MilvusConnectionInDB(MilvusConnectionBase):
     
     id: UUID
     user_id: UUID
-    username_preview: Optional[str] = Field(None, description="用户名安全预览")
+    username: str = Field(..., description="Milvus 用户名（必填）")
     status: str = Field(..., description="连接状态")
     last_used_at: Optional[datetime] = Field(None, description="最后使用时间")
     usage_count: int = Field(0, description="使用次数")
@@ -81,9 +114,8 @@ class MilvusConnectionCreateResponse(BaseModel):
     description: Optional[str]
     host: str
     port: int
-    database_name: Optional[str]
-    username_preview: Optional[str]
-    secure: bool
+    database_name: str
+    username: str
     status: str
     usage_count: int
     connection_string: str
@@ -114,4 +146,3 @@ class MilvusConnectionStatsResponse(BaseModel):
     inactive: int = Field(..., description="非活跃连接数")
     recently_used: int = Field(..., description="最近使用的连接数（7天内）")
     by_status: dict[str, int] = Field(..., description="按状态分组统计")
-    by_secure: dict[str, int] = Field(..., description="按安全连接分组统计")

@@ -8,7 +8,7 @@ from sqlalchemy import and_, func
 
 from app.models.milvus_connection import MilvusConnection
 from app.schemas.milvus_connection import MilvusConnectionCreate, MilvusConnectionUpdate
-from app.core.crypto import encrypt_api_key, decrypt_api_key
+from app.core.crypto import encrypt_api_key, decrypt_api_key, decrypt_rsa, encrypt_sensitive_data, decrypt_sensitive_data
 
 
 class MilvusConnectionCRUD:
@@ -33,18 +33,15 @@ class MilvusConnectionCRUD:
             创建的 MilvusConnection 对象
         """
         # 处理认证信息加密
-        encrypted_username = None
+        username = None
         encrypted_password = None
-        username_preview = None
         
         if obj_in.encrypted_username and obj_in.encrypted_password:
-            # 双重加密：RSA解密 + AES加密存储
-            encrypted_username = encrypt_api_key(obj_in.encrypted_username)
-            encrypted_password = encrypt_api_key(obj_in.encrypted_password)
-            
-            # 解密生成预览（仅用于预览生成，不存储明文）
-            original_username = decrypt_api_key(encrypted_username)
-            username_preview = MilvusConnection().generate_username_preview(original_username)
+            # 用户名：RSA解密后明文存储
+            username = decrypt_rsa(obj_in.encrypted_username)
+            # 密码：RSA解密 + AES加密存储
+            decrypted_password = decrypt_rsa(obj_in.encrypted_password)
+            encrypted_password = encrypt_sensitive_data(decrypted_password)
         
         # 创建数据库对象
         db_obj = MilvusConnection(
@@ -54,10 +51,8 @@ class MilvusConnectionCRUD:
             host=obj_in.host,
             port=obj_in.port,
             database_name=obj_in.database_name,
-            encrypted_username=encrypted_username,
+            username=username,
             encrypted_password=encrypted_password,
-            username_preview=username_preview,
-            secure=obj_in.secure,
             status="active"
         )
         
@@ -89,8 +84,7 @@ class MilvusConnectionCRUD:
         user_id: UUID,
         skip: int = 0, 
         limit: int = 100,
-        status: Optional[str] = None,
-        secure: Optional[bool] = None
+        status: Optional[str] = None
     ) -> tuple[List[MilvusConnection], int]:
         """
         获取用户的 Milvus 连接配置列表（分页）
@@ -101,7 +95,6 @@ class MilvusConnectionCRUD:
             skip: 跳过数量
             limit: 限制数量
             status: 过滤状态
-            secure: 过滤安全连接
             
         Returns:
             (连接配置列表, 总数量)
@@ -111,8 +104,6 @@ class MilvusConnectionCRUD:
         # 添加过滤条件
         if status:
             query = query.filter(MilvusConnection.status == status)
-        if secure is not None:
-            query = query.filter(MilvusConnection.secure == secure)
             
         # 获取总数
         total = query.count()
@@ -241,7 +232,7 @@ class MilvusConnectionCRUD:
 
     def get_plaintext_credentials(self, *, connection: MilvusConnection) -> tuple[Optional[str], Optional[str]]:
         """
-        解密获取明文认证信息（仅用于实际连接）
+        获取明文认证信息（仅用于实际连接）
         
         Args:
             connection: MilvusConnection 对象
@@ -249,12 +240,14 @@ class MilvusConnectionCRUD:
         Returns:
             (用户名, 密码) 的元组，如果未配置认证则返回 (None, None)
         """
-        if not connection.encrypted_username or not connection.encrypted_password:
+        if not connection.username or not connection.encrypted_password:
             return None, None
             
         try:
-            username = decrypt_api_key(connection.encrypted_username)
-            password = decrypt_api_key(connection.encrypted_password)
+            # 用户名已经是明文存储
+            username = connection.username
+            # 密码需要解密
+            password = decrypt_sensitive_data(connection.encrypted_password)
             return username, password
         except Exception:
             return None, None
@@ -323,19 +316,12 @@ class MilvusConnectionCRUD:
             func.count(MilvusConnection.id).label('count')
         ).filter(MilvusConnection.user_id == user_id).group_by(MilvusConnection.status).all()
         
-        # 按安全连接统计
-        secure_stats = db.query(
-            MilvusConnection.secure, 
-            func.count(MilvusConnection.id).label('count')
-        ).filter(MilvusConnection.user_id == user_id).group_by(MilvusConnection.secure).all()
-        
         return {
             "total": total,
             "active": active,
             "inactive": total - active,
             "recently_used": recently_used,
-            "by_status": {stat.status: stat.count for stat in status_stats},
-            "by_secure": {"secure" if stat.secure else "insecure": stat.count for stat in secure_stats}
+            "by_status": {stat.status: stat.count for stat in status_stats}
         }
 
     def update_test_result(

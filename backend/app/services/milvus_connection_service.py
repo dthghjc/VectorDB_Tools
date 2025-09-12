@@ -95,7 +95,6 @@ class MilvusConnectionService:
         user_id: UUID,
         db: Session,
         status: Optional[str] = None,
-        secure: Optional[bool] = None,
         skip: int = 0,
         limit: int = 100
     ) -> Dict[str, Any]:
@@ -106,7 +105,6 @@ class MilvusConnectionService:
             user_id: 用户 ID
             db: 数据库会话
             status: 过滤状态
-            secure: 过滤安全连接
             skip: 跳过数量
             limit: 限制数量
             
@@ -118,7 +116,6 @@ class MilvusConnectionService:
                 db=db,
                 user_id=user_id,
                 status=status,
-                secure=secure,
                 skip=skip,
                 limit=limit
             )
@@ -320,7 +317,6 @@ class MilvusConnectionService:
                 database_name=connection_obj.database_name,
                 username=username,
                 password=password,
-                secure=connection_obj.secure,
                 timeout_seconds=timeout_seconds
             )
             
@@ -440,8 +436,7 @@ class MilvusConnectionService:
             "host": connection_obj.host,
             "port": connection_obj.port,
             "database_name": connection_obj.database_name,
-            "username_preview": connection_obj.username_preview,
-            "secure": connection_obj.secure,
+            "username": connection_obj.username,
             "status": connection_obj.status,
             "last_used_at": connection_obj.last_used_at,
             "usage_count": connection_obj.usage_count,
@@ -464,7 +459,6 @@ class MilvusConnectionService:
         database_name: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        secure: bool = False,
         timeout_seconds: int = 10
     ) -> Tuple[bool, str, Optional[str], Optional[int]]:
         """
@@ -476,7 +470,6 @@ class MilvusConnectionService:
             database_name: 数据库名称
             username: 用户名
             password: 密码
-            secure: 是否使用安全连接
             timeout_seconds: 超时时间
             
         Returns:
@@ -495,9 +488,6 @@ class MilvusConnectionService:
             if username and password:
                 connect_params["user"] = username
                 connect_params["password"] = password
-            
-            if secure:
-                connect_params["secure"] = True
             
             if database_name:
                 connect_params["db_name"] = database_name

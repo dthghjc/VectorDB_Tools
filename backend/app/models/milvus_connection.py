@@ -50,7 +50,7 @@ class MilvusConnection(Base, TimestampMixin):
     host: Mapped[str] = mapped_column(
         String(255), 
         nullable=False,
-        comment="Milvus 服务器主机地址，如 'localhost' 或 'milvus.example.com'"
+        comment="Milvus 服务器主机地址，如 'localhost', '192.168.1.100' 或 'http://example.com'"
     )
     
     port: Mapped[int] = mapped_column(
@@ -60,37 +60,25 @@ class MilvusConnection(Base, TimestampMixin):
         comment="Milvus 服务器端口，默认 19530"
     )
     
-    database_name: Mapped[str | None] = mapped_column(
+    database_name: Mapped[str] = mapped_column(
         String(255), 
-        nullable=True,
-        comment="Milvus 数据库名称，可选（Milvus 2.0+ 支持多数据库）"
-    )
-    
-    # 认证信息 - 敏感信息（加密存储）
-    encrypted_username: Mapped[str | None] = mapped_column(
-        Text, 
-        nullable=True,
-        comment="使用 AES 对称加密存储的用户名（如果启用了认证）"
-    )
-    
-    encrypted_password: Mapped[str | None] = mapped_column(
-        Text, 
-        nullable=True,
-        comment="使用 AES 对称加密存储的密码（如果启用了认证）"
-    )
-    
-    username_preview: Mapped[str | None] = mapped_column(
-        String(50), 
-        nullable=True,
-        comment="用户名的安全预览格式，如 'admin****'"
-    )
-    
-    # 连接配置
-    secure: Mapped[bool] = mapped_column(
-        server_default="false",
         nullable=False,
-        comment="是否使用 TLS/SSL 安全连接"
+        comment="Milvus 数据库名称（必填）"
     )
+    
+    # 认证信息
+    username: Mapped[str] = mapped_column(
+        String(255), 
+        nullable=False,
+        comment="Milvus 认证用户名（必填，明文存储，传输时加密保护）"
+    )
+    
+    encrypted_password: Mapped[str] = mapped_column(
+        Text, 
+        nullable=False,
+        comment="使用 AES 对称加密存储的密码（必填）"
+    )
+    
     
     # 状态管理
     status: Mapped[str] = mapped_column(
@@ -158,19 +146,6 @@ class MilvusConnection(Base, TimestampMixin):
     # 关系映射
     user = relationship("User", back_populates="milvus_connections")
     
-    def generate_username_preview(self, username: str) -> str:
-        """
-        生成用户名的安全预览格式
-        
-        Args:
-            username: 原始用户名
-            
-        Returns:
-            安全预览字符串，格式：前3位****
-        """
-        if not username or len(username) < 4:
-            return "****"
-        return f"{username[:3]}****"
     
     def update_last_used(self) -> None:
         """
@@ -200,19 +175,18 @@ class MilvusConnection(Base, TimestampMixin):
     
     def has_authentication(self) -> bool:
         """检查是否配置了认证信息"""
-        return bool(self.encrypted_username and self.encrypted_password)
+        return bool(self.username and self.encrypted_password)
     
     def get_connection_string(self) -> str:
         """
         生成连接字符串用于显示（不包含敏感信息）
         
         Returns:
-            格式：host:port[/database] (secure/insecure)
+            格式：host:port[/database]
         """
         conn_str = f"{self.host}:{self.port}"
         if self.database_name:
             conn_str += f"/{self.database_name}"
-        conn_str += f" ({'secure' if self.secure else 'insecure'})"
         return conn_str
     
     def __repr__(self) -> str:
