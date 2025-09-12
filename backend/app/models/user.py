@@ -22,5 +22,6 @@ class User(Base, TimestampMixin):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true", nullable=False)
     
-    # 关系映射 - 一个用户可以有多个 API Key
+    # 关系映射 - 一个用户可以有多个 API Key 和 Milvus 连接
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
+    milvus_connections = relationship("MilvusConnection", back_populates="user", cascade="all, delete-orphan")
