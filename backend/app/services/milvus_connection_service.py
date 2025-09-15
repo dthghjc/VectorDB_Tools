@@ -519,8 +519,9 @@ class MilvusConnectionService:
             if database_name:
                 connect_params["db_name"] = database_name
             
+            # 使用 MilvusClient 建立连接 - 确保资源正确释放
+            client = None
             try:
-                # 使用 MilvusClient 建立连接
                 client = MilvusClient(**connect_params)
                 
                 # 测试连接和数据库
@@ -528,45 +529,41 @@ class MilvusConnectionService:
                 collections_count = None
                 database_validated = False
                 
-                try:
-                    # 1. 如果指定了数据库名称，先验证数据库是否存在（仅适用于专用集群）
-                    if database_name and database_name.lower() != 'default':
-                        try:
-                            db_info = client.describe_database(db_name=database_name)
-                            database_validated = True
-                        except Exception as db_error:
-                            # 如果是 Serverless 集群，describe_database 不支持，继续其他测试
-                            if "not supported" in str(db_error).lower() or "method not found" in str(db_error).lower():
-                                database_validated = False  # Serverless 集群不支持，但不算错误
-                            else:
-                                return False, f"数据库 '{database_name}' 不存在或无权限访问: {str(db_error)}", None, None
-                    else:
-                        database_validated = True  # default 数据库或未指定数据库
-                    
-                    # 2. 测试连接 - 尝试获取集合列表
-                    collections_list = client.list_collections()
-                    collections_count = len(collections_list) if collections_list else 0
-                    
-                    # 3. 构建成功消息
-                    success_msg = "连接成功"
-                    if database_validated and database_name:
-                        success_msg += f"，数据库 '{database_name}' 验证通过"
-                    if collections_count is not None:
-                        success_msg += f"，集合数量: {collections_count}"
-                    
-                    return True, success_msg, server_version, collections_count
-                    
-                except Exception as test_error:
-                    # 如果测试失败，但客户端创建成功，可能是权限问题
-                    error_str = str(test_error).lower()
-                    if "permission" in error_str or "unauthorized" in error_str:
-                        return True, "连接成功（但可能权限受限，无法获取详细信息）", server_version, 0
-                    elif "database" in error_str and "not found" in error_str:
-                        return False, f"数据库 '{database_name}' 不存在", None, None
-                    else:
-                        raise test_error
+                # 1. 如果指定了数据库名称，先验证数据库是否存在（仅适用于专用集群）
+                if database_name and database_name.lower() != 'default':
+                    try:
+                        db_info = client.describe_database(db_name=database_name)
+                        database_validated = True
+                    except Exception as db_error:
+                        # 如果是 Serverless 集群，describe_database 不支持，继续其他测试
+                        if "not supported" in str(db_error).lower() or "method not found" in str(db_error).lower():
+                            database_validated = False  # Serverless 集群不支持，但不算错误
+                        else:
+                            return False, f"数据库 '{database_name}' 不存在或无权限访问: {str(db_error)}", None, None
+                else:
+                    database_validated = True  # default 数据库或未指定数据库
                 
+                # 2. 测试连接 - 尝试获取集合列表
+                collections_list = client.list_collections()
+                collections_count = len(collections_list) if collections_list else 0
+                
+                # 3. 构建成功消息
+                success_msg = "连接成功"
+                if database_validated and database_name:
+                    success_msg += f"，数据库 '{database_name}' 验证通过"
+                if collections_count is not None:
+                    success_msg += f"，集合数量: {collections_count}"
+                
+                return True, success_msg, server_version, collections_count
+                    
             except Exception as e:
+                # 处理连接和测试异常
+                error_str = str(e).lower()
+                if "permission" in error_str or "unauthorized" in error_str:
+                    return True, "连接成功（但可能权限受限，无法获取详细信息）", None, 0
+                elif "database" in error_str and "not found" in error_str:
+                    return False, f"数据库 '{database_name}' 不存在", None, None
+                
                 error_msg = str(e)
                 if "connection refused" in error_msg.lower() or "failed to connect" in error_msg.lower():
                     return False, f"连接被拒绝: 请检查连接地址 {uri} 是否正确", None, None
@@ -576,6 +573,15 @@ class MilvusConnectionService:
                     return False, f"连接超时: 服务器响应时间超过 {timeout_seconds} 秒", None, None
                 else:
                     return False, f"连接失败: {error_msg}", None, None
+                    
+            finally:
+                # 关键修复：确保客户端连接被正确关闭，防止资源泄漏
+                if client is not None:
+                    try:
+                        client.close()
+                    except Exception as close_error:
+                        # 关闭失败不应该影响主要逻辑，但需要记录警告
+                        logger.warning(f"关闭 Milvus 客户端时发生警告: {close_error}")
                 
         except ImportError:
             return False, "PyMilvus 库未安装: 无法测试 Milvus 连接", None, None
