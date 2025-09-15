@@ -32,7 +32,6 @@ export default function SignupPage() {
 
   // 页面级业务逻辑：处理注册提交
   const handleSubmit = async (data: SignupFormData) => {
-    console.log('SignupPage: Submitting registration:', { email: data.email, full_name: data.full_name })
     dispatch(registerUser(data))
   }
 

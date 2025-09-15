@@ -100,16 +100,14 @@ export const fetchMilvusConnections = createAsyncThunk(
   async ({ 
     page = 1, 
     size = 10,
-    status,
-    secure
+    status
   }: { 
     page?: number; 
     size?: number;
     status?: 'active' | 'inactive';
-    secure?: boolean;
   } = {}, { rejectWithValue }) => {
     try {
-      const response = await milvusConnectionService.getList(page, size, status, secure);
+      const response = await milvusConnectionService.getList(page, size, status);
       return response;
     } catch (error: any) {
       const message = error.response?.data?.detail || error.message || '获取列表失败';

@@ -20,14 +20,12 @@ export default function LoginPage() {
     if (isAuthenticated) {
       // 获取重定向目标：原来的页面或默认首页
       const from = location.state?.from?.pathname || '/'
-      console.log('登录成功，重定向到:', from)
       navigate(from, { replace: true })
     }
   }, [isAuthenticated, navigate, location.state])
 
   // 页面级业务逻辑：处理登录提交
   const handleSubmit = async (data: LoginFormData) => {
-    console.log('LoginPage: Submitting login:', { email: data.email, password: '***' })
     dispatch(loginUser(data))
   }
 

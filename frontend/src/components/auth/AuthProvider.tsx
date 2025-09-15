@@ -42,11 +42,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
           
           // 如果token将在5分钟内过期，提前登出
           if (timeUntilExpiry <= 300) {
-            console.warn('Token将要过期，自动登出');
             dispatch(logoutUser());
           }
         } catch (error) {
-          console.error('Token解析错误:', error);
           dispatch(logoutUser());
         }
       }

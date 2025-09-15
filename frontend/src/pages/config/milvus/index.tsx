@@ -42,8 +42,7 @@ export default function MilvusConfigPage() {
 
   // 添加连接成功后的回调
   const handleAddSuccess = () => {
-    // 连接配置创建成功后，Redux 会自动更新列表，这里可以显示成功消息
-    console.log("Milvus 连接配置添加成功");
+    // 连接配置创建成功后，Redux 会自动更新列表
   };
 
   // 打开删除确认对话框
@@ -206,18 +205,18 @@ export default function MilvusConfigPage() {
                   {/* 连接信息 */}
                   <div className="mt-2 space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      <span className="text-muted-foreground/70">主机:</span>
-                      <span className="font-medium text-foreground ml-1">{connection.host}:{connection.port}</span>
+                      <span className="text-muted-foreground/70">连接地址:</span>
+                      <span className="font-medium text-foreground ml-1">{connection.uri}</span>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       <span className="text-muted-foreground/70">数据库:</span>
                       <span className="font-medium text-foreground ml-1">{connection.database_name}</span>
                     </p>
-                    {connection.username && (
+                    {connection.token_info && (
                       <p className="text-sm text-muted-foreground">
-                        <span className="text-muted-foreground/70">用户:</span>
+                        <span className="text-muted-foreground/70">认证:</span>
                         <span className="font-medium text-foreground ml-1 font-mono bg-muted px-2 py-0.5 rounded text-xs">
-                          {connection.username}
+                          {connection.token_info}
                         </span>
                       </p>
                     )}

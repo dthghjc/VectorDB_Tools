@@ -8,10 +8,9 @@ export interface MilvusConnection {
   user_id: string;
   name: string;
   description: string | null;
-  host: string;
-  port: number;
+  uri: string;
   database_name: string;
-  username: string;
+  token_info: string;
   status: 'active' | 'inactive';
   last_used_at: string | null;
   usage_count: number;
@@ -31,11 +30,9 @@ export interface MilvusConnection {
 export interface CreateMilvusConnectionRequest {
   name: string;
   description?: string;
-  host: string;
-  port: number;
+  uri: string;
   database_name: string;  // 必填
-  username: string;      // 必填，明文用户名，将在前端加密
-  password: string;      // 必填，明文密码，将在前端加密
+  token: string;         // 必填，明文 token（如 your_token 或 user:password），将在前端加密
 }
 
 /**
@@ -45,10 +42,9 @@ export interface CreateMilvusConnectionResponse {
   id: string;
   name: string;
   description: string | null;
-  host: string;
-  port: number;
+  uri: string;
   database_name: string;
-  username: string;
+  token_info: string;
   status: 'active';
   usage_count: number;
   connection_string: string;
@@ -63,8 +59,7 @@ export interface CreateMilvusConnectionResponse {
 export interface UpdateMilvusConnectionRequest {
   name?: string;
   description?: string;
-  host?: string;
-  port?: number;
+  uri?: string;
   database_name?: string;
   status?: 'active' | 'inactive';
 }
@@ -108,6 +103,7 @@ export interface MilvusConnectionStatsResponse {
   inactive: number;
   recently_used: number;
   by_status: Record<string, number>;
+  by_secure: Record<string, number>;
 }
 
 /**
@@ -115,11 +111,9 @@ export interface MilvusConnectionStatsResponse {
  */
 export interface MilvusConnectionValidationErrors {
   name?: string;
-  host?: string;
-  port?: string;
+  uri?: string;
   database_name?: string;
-  username?: string;
-  password?: string;
+  token?: string;
 }
 
 /**
@@ -128,9 +122,7 @@ export interface MilvusConnectionValidationErrors {
 export interface MilvusConnectionFormData {
   name: string;
   description: string;
-  host: string;
-  port: number;
+  uri: string;
   database_name: string;
-  username: string;
-  password: string;
+  token: string;
 }

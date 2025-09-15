@@ -42,18 +42,16 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
   const [formData, setFormData] = useState<MilvusConnectionFormData>({
     name: "",
     description: "",
-    host: "",                       // 空值，显示占位符
-    port: 0,                        // 空值，显示占位符
+    uri: "",                        // 空值，显示占位符
     database_name: "",              // 空值，显示占位符
-    username: "",
-    password: "",
+    token: "",
   });
   const [validationErrors, setValidationErrors] = useState<MilvusConnectionValidationErrors>({});
   
   // 检查表单是否完整且有效
   const errors = validateMilvusConnectionForm(formData);
   const isFormValid = Object.keys(errors).length === 0 && 
-                     formData.name.trim() && formData.host.trim() && formData.port > 0;
+                     formData.name.trim() && formData.uri.trim() && formData.token.trim();
   
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -70,11 +68,9 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
     setFormData({
       name: "",
       description: "",
-      host: "",
-      port: 0,
+      uri: "",
       database_name: "",
-      username: "",
-      password: "",
+      token: "",
     });
     setValidationErrors({});
   };
@@ -89,7 +85,7 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
     setFormData(newFormData);
     
     // 实时验证：当用户修改字段时立即验证该字段
-    if (field in {name: '', host: '', port: 0, database_name: '', username: '', password: ''}) {
+    if (field in {name: '', uri: '', database_name: '', token: ''}) {
       const fieldError = validateMilvusConnectionField(
         field as keyof MilvusConnectionValidationErrors, 
         value, 
@@ -120,11 +116,9 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
         const requestData = {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
-          host: formData.host.trim(),
-          port: formData.port,
+          uri: formData.uri.trim(),
           database_name: formData.database_name.trim(),
-          username: formData.username.trim(),
-          password: formData.password.trim(),
+          token: formData.token.trim(),
         };
 
       // 调用 Redux action 创建连接配置
@@ -140,7 +134,6 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
       // 失败的情况由 Redux 自动处理，错误会显示在 UI 中
     } catch (err) {
       // 额外的错误处理（如果需要）
-      console.error('创建 Milvus 连接配置失败:', err);
     }
   };
 
@@ -161,7 +154,7 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
               添加 Milvus 连接配置
             </DialogTitle>
             <DialogDescription>
-              配置新的 Milvus 数据库连接。认证信息将被安全加密存储。
+              配置新的 Milvus 数据库连接。
             </DialogDescription>
           </DialogHeader>
 
@@ -170,38 +163,34 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">基本信息</h4>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
+              <div className="space-y-2">
+                <Label htmlFor="name">
                   连接名称
                 </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="例如：生产环境"
-                    className={validationErrors.name ? "border-red-500" : ""}
-                    required
-                  />
-                  {validationErrors.name && (
-                    <p className="text-xs text-red-500">{validationErrors.name}</p>
-                  )}
-                </div>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="例如：生产环境"
+                  className={validationErrors.name ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.name && (
+                  <p className="text-xs text-red-500">{validationErrors.name}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="description" className="text-right pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="description">
                   描述
                 </Label>
-                <div className="col-span-3 space-y-1">
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="连接配置的说明（可选）"
-                    rows={2}
-                  />
-                </div>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="连接配置的说明，如：用户名、知识库说明等（可选）"
+                  rows={2}
+                />
               </div>
             </div>
 
@@ -209,64 +198,41 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">连接参数</h4>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="host" className="text-right">
-                  主机地址
+              <div className="space-y-2">
+                <Label htmlFor="uri">
+                  连接 URI
                 </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="host"
-                    value={formData.host}
-                    onChange={(e) => handleInputChange('host', e.target.value)}
-                      placeholder="例如：http://localhost 或 https://example.com"
-                    className={validationErrors.host ? "border-red-500" : ""}
-                    required
-                  />
-                  {validationErrors.host && (
-                    <p className="text-xs text-red-500">{validationErrors.host}</p>
-                  )}
-                </div>
+                <Input
+                  id="uri"
+                  value={formData.uri}
+                  onChange={(e) => handleInputChange('uri', e.target.value)}
+                  placeholder="例如：http://localhost:19530"
+                  className={validationErrors.uri ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.uri && (
+                  <p className="text-xs text-red-500">{validationErrors.uri}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  支持本地部署（如 http://localhost:19530）或云服务（如 Zilliz Cloud）的 URI
+                </p>
               </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="port" className="text-right">
-                  端口
-                </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="port"
-                    type="number"
-                    value={formData.port || ""}
-                    onChange={(e) => handleInputChange('port', parseInt(e.target.value) || 0)}
-                    placeholder="例如：19530"
-                    min="1"
-                    max="65535"
-                    className={validationErrors.port ? "border-red-500" : ""}
-                    required
-                  />
-                  {validationErrors.port && (
-                    <p className="text-xs text-red-500">{validationErrors.port}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="database_name" className="text-right">
+              <div className="space-y-2">
+                <Label htmlFor="database_name">
                   数据库名称
                 </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="database_name"
-                    value={formData.database_name}
-                    onChange={(e) => handleInputChange('database_name', e.target.value)}
-                    placeholder="例如：default"
-                    className={validationErrors.database_name ? "border-red-500" : ""}
-                    required
-                  />
-                  {validationErrors.database_name && (
-                    <p className="text-xs text-red-500">{validationErrors.database_name}</p>
-                  )}
-                </div>
+                <Input
+                  id="database_name"
+                  value={formData.database_name}
+                  onChange={(e) => handleInputChange('database_name', e.target.value)}
+                  placeholder="例如：default"
+                  className={validationErrors.database_name ? "border-red-500" : ""}
+                  required
+                />
+                {validationErrors.database_name && (
+                  <p className="text-xs text-red-500">{validationErrors.database_name}</p>
+                )}
               </div>
 
             </div>
@@ -275,48 +241,25 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">认证信息</h4>
               
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="username" className="text-right">
-                  用户名
+              <div className="space-y-2">
+                <Label htmlFor="token">
+                  认证 Token
                 </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange('username', e.target.value)}
-                    placeholder="例如：admin"
-                    className={validationErrors.username ? "border-red-500" : ""}
-                    autoComplete="username"
-                    required
-                  />
-                  {validationErrors.username && (
-                    <p className="text-xs text-red-500">{validationErrors.username}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">
-                  密码
-                </Label>
-                <div className="col-span-3 space-y-1">
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="例如：your_password"
-                    className={validationErrors.password ? "border-red-500" : ""}
-                    autoComplete="new-password"
-                    required
-                  />
-                  {validationErrors.password && (
-                    <p className="text-xs text-red-500">{validationErrors.password}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    认证信息将使用 RSA 加密传输并安全存储
-                  </p>
-                </div>
+                <Input
+                  id="token"
+                  value={formData.token}
+                  onChange={(e) => handleInputChange('token', e.target.value)}
+                  placeholder="例如：your_token 或 username:password"
+                  className={validationErrors.token ? "border-red-500" : ""}
+                  autoComplete="off"
+                  required
+                />
+                {validationErrors.token && (
+                  <p className="text-xs text-red-500">{validationErrors.token}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  认证信息将加密传输并安全存储。可以是单独的 token 或 username:password 格式
+                </p>
               </div>
 
             </div>

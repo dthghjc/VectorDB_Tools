@@ -305,18 +305,16 @@ class MilvusConnectionService:
                     )
                 return False, "连接配置已被禁用", response_time, None, None
             
-            # 获取明文认证信息
-            username, password = milvus_connection_crud.get_plaintext_credentials(
+            # 获取明文认证 token
+            token = milvus_connection_crud.get_plaintext_token(
                 connection=connection_obj
             )
             
             # 尝试连接 Milvus
             is_valid, message, server_version, collections_count = self._test_milvus_connection(
-                host=connection_obj.host,
-                port=connection_obj.port,
+                uri=connection_obj.uri,
                 database_name=connection_obj.database_name,
-                username=username,
-                password=password,
+                token=token,
                 timeout_seconds=timeout_seconds
             )
             
@@ -418,6 +416,36 @@ class MilvusConnectionService:
                 "STATS_ERROR"
             )
     
+    def _get_token_display_info(self, connection_obj: MilvusConnection) -> str:
+        """
+        获取 token 的脱敏显示信息
+        
+        Args:
+            connection_obj: 连接对象
+            
+        Returns:
+            脱敏后的 token 信息字符串
+        """
+        if not connection_obj.encrypted_token:
+            return "未配置"
+        
+        try:
+            from app.core.crypto import decrypt_sensitive_data
+            token = decrypt_sensitive_data(connection_obj.encrypted_token)
+            
+            # 如果是 username:password 格式，脱敏显示
+            if ':' in token:
+                username, _ = token.split(':', 1)
+                return f"{username}:****"
+            else:
+                # 单纯 token，显示前几位和后几位
+                if len(token) <= 8:
+                    return "****"
+                else:
+                    return f"{token[:4]}****{token[-4:]}"
+        except:
+            return "无法解析"
+    
     def _format_connection_response(self, connection_obj: MilvusConnection) -> Dict[str, Any]:
         """
         格式化连接配置响应数据（安全格式，不包含敏感信息）
@@ -433,10 +461,9 @@ class MilvusConnectionService:
             "user_id": connection_obj.user_id,
             "name": connection_obj.name,
             "description": connection_obj.description,
-            "host": connection_obj.host,
-            "port": connection_obj.port,
+            "uri": connection_obj.uri,
             "database_name": connection_obj.database_name,
-            "username": connection_obj.username,
+            "token_info": self._get_token_display_info(connection_obj),
             "status": connection_obj.status,
             "last_used_at": connection_obj.last_used_at,
             "usage_count": connection_obj.usage_count,
@@ -454,89 +481,71 @@ class MilvusConnectionService:
     def _test_milvus_connection(
         self,
         *,
-        host: str,
-        port: int,
+        uri: str,
         database_name: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        token: Optional[str] = None,
         timeout_seconds: int = 10
     ) -> Tuple[bool, str, Optional[str], Optional[int]]:
         """
         测试 Milvus 连接
         
         Args:
-            host: 主机地址
-            port: 端口
+            uri: 连接 URI
             database_name: 数据库名称
-            username: 用户名
-            password: 密码
+            token: 认证 token（可以是 username:password 或纯 token）
             timeout_seconds: 超时时间
             
         Returns:
             (是否成功, 消息, 服务器版本, 集合数量)
         """
         try:
-            from pymilvus import connections, utility
+            from pymilvus import MilvusClient
             
-            # 构建连接参数
+            # 构建连接参数 - 直接使用 URI
             connect_params = {
-                "host": host,
-                "port": port,
+                "uri": uri,
                 "timeout": timeout_seconds
             }
             
-            if username and password:
-                connect_params["user"] = username
-                connect_params["password"] = password
+            # 如果有认证 token，直接使用
+            if token:
+                connect_params["token"] = token
             
             if database_name:
                 connect_params["db_name"] = database_name
             
-            # 生成连接别名
-            alias = f"test_conn_{hash(f'{host}:{port}')}"
-            
             try:
-                # 建立连接
-                connections.connect(alias=alias, **connect_params)
+                # 使用 MilvusClient 建立连接
+                client = MilvusClient(**connect_params)
                 
-                # 获取服务器版本
+                # 测试连接 - 尝试获取集合列表
                 server_version = None
-                try:
-                    server_version = utility.get_server_version(using=alias)
-                except:
-                    pass  # 版本获取失败不影响连接测试
-                
-                # 获取集合数量
                 collections_count = None
+                
                 try:
-                    collections = utility.list_collections(using=alias)
-                    collections_count = len(collections)
-                except:
-                    pass  # 集合列表获取失败不影响连接测试
-                
-                # 断开连接
-                connections.disconnect(alias=alias)
-                
-                success_msg = "连接成功"
-                if server_version:
-                    success_msg += f", 服务器版本: {server_version}"
-                if collections_count is not None:
-                    success_msg += f", 集合数量: {collections_count}"
-                
-                return True, success_msg, server_version, collections_count
+                    # 获取集合列表（这会测试连接是否有效）
+                    collections_list = client.list_collections()
+                    collections_count = len(collections_list) if collections_list else 0
+                    
+                    success_msg = "连接成功"
+                    if collections_count is not None:
+                        success_msg += f", 集合数量: {collections_count}"
+                    
+                    return True, success_msg, server_version, collections_count
+                    
+                except Exception as list_error:
+                    # 如果获取集合失败，但客户端创建成功，可能是权限问题
+                    if "permission" in str(list_error).lower() or "unauthorized" in str(list_error).lower():
+                        return True, "连接成功（但可能权限受限）", server_version, 0
+                    else:
+                        raise list_error
                 
             except Exception as e:
-                # 确保断开连接
-                try:
-                    connections.disconnect(alias=alias)
-                except:
-                    pass
-                
                 error_msg = str(e)
-                if "connection refused" in error_msg.lower():
-                    return False, f"连接被拒绝: 请检查主机地址 {host}:{port} 是否正确", None, None
-                elif "authentication" in error_msg.lower() or "credential" in error_msg.lower():
-                    return False, "认证失败: 请检查用户名和密码", None, None
+                if "connection refused" in error_msg.lower() or "failed to connect" in error_msg.lower():
+                    return False, f"连接被拒绝: 请检查连接地址 {uri} 是否正确", None, None
+                elif "authentication" in error_msg.lower() or "credential" in error_msg.lower() or "unauthorized" in error_msg.lower():
+                    return False, "认证失败: 请检查认证 token 是否正确", None, None
                 elif "timeout" in error_msg.lower():
                     return False, f"连接超时: 服务器响应时间超过 {timeout_seconds} 秒", None, None
                 else:

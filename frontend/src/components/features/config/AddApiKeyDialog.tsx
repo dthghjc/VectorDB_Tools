@@ -68,7 +68,6 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
         const options = transformProvidersToOptions(providers);
         setProviderOptions(options);
       } catch (error) {
-        console.error('获取供应商列表失败:', error);
       } finally {
         setLoadingProviders(false);
       }
@@ -173,7 +172,6 @@ export default function AddApiKeyDialog({ onSuccess }: AddApiKeyDialogProps) {
       // 失败的情况由 Redux 自动处理，错误会显示在 UI 中
     } catch (err) {
       // 额外的错误处理（如果需要）
-      console.error('创建 API Key 失败:', err);
     }
   };
 

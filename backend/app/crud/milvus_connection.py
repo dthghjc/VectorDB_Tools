@@ -33,26 +33,21 @@ class MilvusConnectionCRUD:
             创建的 MilvusConnection 对象
         """
         # 处理认证信息加密
-        username = None
-        encrypted_password = None
+        encrypted_token = None
         
-        if obj_in.encrypted_username and obj_in.encrypted_password:
-            # 用户名：RSA解密后明文存储
-            username = decrypt_rsa(obj_in.encrypted_username)
-            # 密码：RSA解密 + AES加密存储
-            decrypted_password = decrypt_rsa(obj_in.encrypted_password)
-            encrypted_password = encrypt_sensitive_data(decrypted_password)
+        if obj_in.encrypted_token:
+            # Token：RSA解密 + AES加密存储
+            decrypted_token = decrypt_rsa(obj_in.encrypted_token)
+            encrypted_token = encrypt_sensitive_data(decrypted_token)
         
         # 创建数据库对象
         db_obj = MilvusConnection(
             user_id=user_id,
             name=obj_in.name,
             description=obj_in.description,
-            host=obj_in.host,
-            port=obj_in.port,
+            uri=obj_in.uri,
             database_name=obj_in.database_name,
-            username=username,
-            encrypted_password=encrypted_password,
+            encrypted_token=encrypted_token,
             status="active"
         )
         
@@ -230,37 +225,36 @@ class MilvusConnectionCRUD:
         db.refresh(db_obj)
         return db_obj
 
-    def get_plaintext_credentials(self, *, connection: MilvusConnection) -> tuple[Optional[str], Optional[str]]:
+    def get_plaintext_token(self, *, connection: MilvusConnection) -> Optional[str]:
         """
-        获取明文认证信息（仅用于实际连接）
+        获取明文认证 token（仅用于实际连接）
         
         Args:
             connection: MilvusConnection 对象
             
         Returns:
-            (用户名, 密码) 的元组，如果未配置认证则返回 (None, None)
+            解密后的 token，如果未配置认证则返回 None
         """
-        if not connection.username or not connection.encrypted_password:
-            return None, None
+        if not connection.encrypted_token:
+            return None
             
         try:
-            # 用户名已经是明文存储
-            username = connection.username
-            # 密码需要解密
-            password = decrypt_sensitive_data(connection.encrypted_password)
-            return username, password
+            # Token 需要解密
+            token = decrypt_sensitive_data(connection.encrypted_token)
+            return token
         except Exception:
-            return None, None
+            # 解密失败，返回空值
+            return None
     
-    def get_plaintext_credentials_by_id(
+    def get_plaintext_token_by_id(
         self, 
         db: Session, 
         *, 
         connection_id: UUID, 
         user_id: UUID
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> Optional[str]:
         """
-        通过连接配置 ID 安全获取明文认证信息（包含权限验证）
+        通过连接配置 ID 安全获取明文认证 token（包含权限验证）
         
         Args:
             db: 数据库会话
@@ -268,7 +262,7 @@ class MilvusConnectionCRUD:
             user_id: 用户 ID（用于权限验证）
             
         Returns:
-            (用户名, 密码) 的元组，如果不存在或无权限则返回 (None, None)
+            解密后的 token，如果不存在或无权限则返回 None
         """
         # 先验证权限：确保连接配置属于该用户
         db_obj = db.query(MilvusConnection).filter(
@@ -277,10 +271,10 @@ class MilvusConnectionCRUD:
         ).first()
         
         if not db_obj:
-            return None, None
+            return None
             
-        # 解密并返回明文认证信息
-        return self.get_plaintext_credentials(connection=db_obj)
+        # 解密并返回明文 token
+        return self.get_plaintext_token(connection=db_obj)
 
     def get_user_stats(self, db: Session, *, user_id: UUID) -> dict:
         """

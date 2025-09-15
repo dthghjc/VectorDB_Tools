@@ -143,21 +143,17 @@ export function validateApiKeyField(
  */
 export interface MilvusConnectionValidationErrors {
   name?: string;
-  host?: string;
-  port?: string;
+  uri?: string;
   database_name?: string;
-  username?: string;
-  password?: string;
+  token?: string;
 }
 
 export function validateMilvusConnectionForm(data: {
   name: string;
   description: string;
-  host: string;
-  port: number;
+  uri: string;
   database_name: string;
-  username: string;
-  password: string;
+  token: string;
 }): MilvusConnectionValidationErrors {
   const errors: MilvusConnectionValidationErrors = {};
 
@@ -168,36 +164,27 @@ export function validateMilvusConnectionForm(data: {
     errors.name = '连接名称长度必须在1-255个字符之间';
   }
 
-  // 验证主机地址（必须是完整 URL，包含协议）
-  if (!data.host.trim()) {
-    errors.host = '请输入主机地址';
-  } else if (!isValidLength(data.host, 1, 500)) {
-    errors.host = '主机地址长度必须在1-500个字符之间';
+  // 验证 URI（完整的连接地址，可包含端口）
+  if (!data.uri.trim()) {
+    errors.uri = '请输入连接 URI';
+  } else if (!isValidLength(data.uri, 1, 500)) {
+    errors.uri = 'URI 长度必须在1-500个字符之间';
   } else {
-    const trimmedHost = data.host.trim();
+    const trimmedUri = data.uri.trim();
     
     // 必须包含协议
-    if (!trimmedHost.includes('://')) {
-      errors.host = '主机地址必须包含协议（如 http://localhost 或 https://example.com）';
+    if (!trimmedUri.includes('://')) {
+      errors.uri = 'URI 必须包含协议（如 http://localhost:19530 或 https://your-zilliz-cluster.vectordb.zillizcloud.com）';
     } else {
       try {
-        const url = new URL(trimmedHost);
+        const url = new URL(trimmedUri);
         if (!['http:', 'https:'].includes(url.protocol)) {
-          errors.host = '协议必须是 http 或 https';
-        }
-        // 检查URL中是否包含端口，如果有则提示分别填写
-        if (url.port) {
-          errors.host = '请将端口在单独的端口字段中填写，主机地址中不要包含端口';
+          errors.uri = '协议必须是 http 或 https';
         }
       } catch {
-        errors.host = '无效的 URL 格式，请输入完整的 URL（如 http://localhost 或 https://example.com）';
+        errors.uri = '无效的 URI 格式，请输入完整的 URI（如 http://localhost:19530 或 https://your-cluster.vectordb.zillizcloud.com）';
       }
     }
-  }
-
-  // 验证端口
-  if (!data.port || data.port <= 0 || data.port > 65535) {
-    errors.port = '端口必须在1-65535之间';
   }
 
   // 验证数据库名称（必填）
@@ -207,16 +194,11 @@ export function validateMilvusConnectionForm(data: {
     errors.database_name = '数据库名称长度必须在1-255个字符之间';
   }
 
-  // 验证用户名（必填）
-  if (!data.username.trim()) {
-    errors.username = '请输入用户名';
-  } else if (!isValidLength(data.username, 1, 255)) {
-    errors.username = '用户名长度必须在1-255个字符之间';
-  }
-
-  // 验证密码（必填）
-  if (!data.password.trim()) {
-    errors.password = '请输入密码';
+  // 验证 token（必填）
+  if (!data.token.trim()) {
+    errors.token = '请输入认证 Token';
+  } else if (!isValidLength(data.token, 1, 500)) {
+    errors.token = 'Token 长度必须在1-500个字符之间';
   }
 
   return errors;
@@ -235,11 +217,9 @@ export function validateMilvusConnectionField(
   _formData?: {
     name: string;
     description: string;
-    host: string;
-    port: number;
+    uri: string;
     database_name: string;
-    username: string;
-    password: string;
+    token: string;
   }
 ): string | undefined {
   switch (field) {
@@ -251,37 +231,27 @@ export function validateMilvusConnectionField(
       }
       break;
 
-    case 'host':
+    case 'uri':
       if (!value || !value.toString().trim()) {
-        return '请输入主机地址';
+        return '请输入连接 URI';
       } else if (!isValidLength(value.toString(), 1, 500)) {
-        return '主机地址长度必须在1-500个字符之间';
+        return 'URI 长度必须在1-500个字符之间';
       } else {
-        const trimmedHost = value.toString().trim();
+        const trimmedUri = value.toString().trim();
         
         // 必须包含协议
-        if (!trimmedHost.includes('://')) {
-          return '主机地址必须包含协议（如 http://localhost 或 https://example.com）';
+        if (!trimmedUri.includes('://')) {
+          return 'URI 必须包含协议（如 http://localhost:19530 或 https://your-zilliz-cluster.vectordb.zillizcloud.com）';
         } else {
           try {
-            const url = new URL(trimmedHost);
+            const url = new URL(trimmedUri);
             if (!['http:', 'https:'].includes(url.protocol)) {
               return '协议必须是 http 或 https';
             }
-            // 检查URL中是否包含端口，如果有则提示分别填写
-            if (url.port) {
-              return '请将端口在单独的端口字段中填写，主机地址中不要包含端口';
-            }
           } catch {
-            return '无效的 URL 格式，请输入完整的 URL（如 http://localhost 或 https://example.com）';
+            return '无效的 URI 格式，请输入完整的 URI（如 http://localhost:19530 或 https://your-cluster.vectordb.zillizcloud.com）';
           }
         }
-      }
-      break;
-
-    case 'port':
-      if (!value || value <= 0 || value > 65535) {
-        return '端口必须在1-65535之间';
       }
       break;
 
@@ -293,17 +263,11 @@ export function validateMilvusConnectionField(
       }
       break;
 
-    case 'username':
+    case 'token':
       if (!value || !value.toString().trim()) {
-        return '请输入用户名';
-      } else if (!isValidLength(value.toString(), 1, 255)) {
-        return '用户名长度必须在1-255个字符之间';
-      }
-      break;
-
-    case 'password':
-      if (!value || !value.toString().trim()) {
-        return '请输入密码';
+        return '请输入认证 Token';
+      } else if (!isValidLength(value.toString(), 1, 500)) {
+        return 'Token 长度必须在1-500个字符之间';
       }
       break;
 

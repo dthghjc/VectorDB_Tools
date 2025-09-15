@@ -12,7 +12,7 @@ class MilvusConnection(Base, TimestampMixin):
     Milvus 连接配置模型
     
     用于存储用户的 Milvus 数据库连接信息。
-    敏感信息（用户名、密码）采用前端 RSA 加密 + 后端 AES 对称加密的双重保护。
+    敏感信息（认证 token）采用前端 RSA 加密 + 后端 AES 对称加密的双重保护。
     """
     __tablename__ = "milvus_connections"
 
@@ -47,17 +47,10 @@ class MilvusConnection(Base, TimestampMixin):
     )
     
     # 连接参数 - 非敏感信息（明文存储）
-    host: Mapped[str] = mapped_column(
-        String(255), 
+    uri: Mapped[str] = mapped_column(
+        String(500), 
         nullable=False,
-        comment="Milvus 服务器主机地址，如 'localhost', '192.168.1.100' 或 'http://example.com'"
-    )
-    
-    port: Mapped[int] = mapped_column(
-        Integer, 
-        nullable=False,
-        server_default="19530",  # Milvus 默认端口
-        comment="Milvus 服务器端口，默认 19530"
+        comment="Milvus 连接 URI，完整地址包含协议和端口，如 'http://localhost:19530' 或 'https://cluster.vectordb.zillizcloud.com'"
     )
     
     database_name: Mapped[str] = mapped_column(
@@ -67,16 +60,10 @@ class MilvusConnection(Base, TimestampMixin):
     )
     
     # 认证信息
-    username: Mapped[str] = mapped_column(
-        String(255), 
-        nullable=False,
-        comment="Milvus 认证用户名（必填，明文存储，传输时加密保护）"
-    )
-    
-    encrypted_password: Mapped[str] = mapped_column(
+    encrypted_token: Mapped[str] = mapped_column(
         Text, 
         nullable=False,
-        comment="使用 AES 对称加密存储的密码（必填）"
+        comment="使用 AES 对称加密存储的认证 token（必填，格式：token 或 username:password）"
     )
     
     
@@ -136,11 +123,6 @@ class MilvusConnection(Base, TimestampMixin):
             "status IN ('active', 'inactive')", 
             name='ck_milvus_connection_status'
         ),
-        # 端口范围约束
-        CheckConstraint(
-            "port > 0 AND port <= 65535", 
-            name='ck_milvus_connection_port_range'
-        ),
     )
     
     # 关系映射
@@ -175,19 +157,19 @@ class MilvusConnection(Base, TimestampMixin):
     
     def has_authentication(self) -> bool:
         """检查是否配置了认证信息"""
-        return bool(self.username and self.encrypted_password)
+        return bool(self.encrypted_token)
     
     def get_connection_string(self) -> str:
         """
         生成连接字符串用于显示（不包含敏感信息）
         
         Returns:
-            格式：host:port[/database]
+            格式：uri[/database]
         """
-        conn_str = f"{self.host}:{self.port}"
+        conn_str = self.uri
         if self.database_name:
             conn_str += f"/{self.database_name}"
         return conn_str
     
     def __repr__(self) -> str:
-        return f"<MilvusConnection(id={self.id}, name='{self.name}', host='{self.host}', port={self.port}, status='{self.status}')>"
+        return f"<MilvusConnection(id={self.id}, name='{self.name}', uri='{self.uri}', status='{self.status}')>"

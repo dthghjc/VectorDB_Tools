@@ -82,7 +82,6 @@ const storageManager = {
     try {
       return userStr ? JSON.parse(userStr) : null;
     } catch (error) {
-      console.error('解析用户信息失败:', error);
       return null;
     }
   },
@@ -177,22 +176,13 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      console.log('🔐 [Auth] 尝试登录，邮箱:', credentials.email);
       
       // 调用登录API
       const response = await authService.login(credentials);
       
-      console.log('✅ [Auth] 登录成功:', {
-        email: response.data.email,
-        hasToken: !!response.data.access_token
-      });
       
       return response.data;
     } catch (error: any) {
-      console.error('❌ [Auth] 登录失败:', {
-        email: credentials.email,
-        error: error.response?.data || error.message
-      });
       
       // 使用错误处理工具获取国际化错误信息
       const errorMessage = ErrorHandler.getLoginError(error);
@@ -210,22 +200,12 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (credentials: RegisterCredentials, { rejectWithValue }) => {
     try {
-      console.log('📝 [Auth] 尝试注册，邮箱:', credentials.email);
       
       // 调用注册API
       const response = await authService.register(credentials);
       
-      console.log('✅ [Auth] 注册成功:', {
-        email: response.data.email,
-        fullName: response.data.full_name
-      });
-      
       return response.data;
     } catch (error: any) {
-      console.error('❌ [Auth] 注册失败:', {
-        email: credentials.email,
-        error: error.response?.data || error.message
-      });
       
       // 使用错误处理工具获取国际化错误信息
       const errorMessage = ErrorHandler.getRegisterError(error);
@@ -245,12 +225,10 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async () => {
-    console.log('🚪 [Auth] 用户退出登录');
     
     // 清除所有本地存储的认证数据
     storageManager.clear();
     
-    console.log('✅ [Auth] 退出登录成功');
     return null;
   }
 );
@@ -273,7 +251,6 @@ const authSlice = createSlice({
      */
     clearError: (state) => {
       state.error = null;
-      console.log('🧹 [Auth] 清除错误信息');
     },
     
     /**
@@ -281,20 +258,16 @@ const authSlice = createSlice({
      * 检查当前存储的token是否有效，无效则清除认证状态
      */
     validateToken: (state) => {
-      console.log('🔍 [Auth] 验证token有效性');
       
       if (!state.token) {
-        console.log('⚠️ [Auth] 无token，跳过验证');
         return;
       }
       
       const { isValid } = tokenValidator.validate(state.token);
       
       if (isValid) {
-        console.log('✅ [Auth] Token有效，设置认证状态');
         state.isAuthenticated = true;
       } else {
-        console.log('❌ [Auth] Token无效或已过期，清除认证状态');
         authStateResetter.clearAuthState(state);
       }
     },
@@ -304,12 +277,10 @@ const authSlice = createSlice({
      * 应用启动时调用，用于恢复用户的登录状态
      */
     setAuthFromStorage: (state) => {
-      console.log('🔄 [Auth] 从本地存储恢复认证状态');
       
       const token = storageManager.getToken();
       
       if (!token) {
-        console.log('⚠️ [Auth] 本地存储无token');
         state.isInitialized = true;  // 标记初始化完成，即使没有token
         return;
       }
@@ -317,7 +288,6 @@ const authSlice = createSlice({
       const { isValid } = tokenValidator.validate(token);
       
       if (isValid) {
-        console.log('✅ [Auth] 从本地存储恢复认证状态成功');
         state.token = token;
         state.isAuthenticated = true;
         state.isInitialized = true;  // 标记初始化完成
@@ -326,10 +296,8 @@ const authSlice = createSlice({
         const user = storageManager.getUser();
         if (user) {
           state.user = user;
-          console.log('✅ [Auth] 恢复用户信息成功:', user.email);
         }
       } else {
-        console.log('❌ [Auth] 本地存储的token无效，清除');
         storageManager.clear();
         state.isInitialized = true;  // 标记初始化完成，即使token无效
       }
@@ -345,14 +313,12 @@ const authSlice = createSlice({
       
       // 登录开始
       .addCase(loginUser.pending, (state) => {
-        console.log('⏳ [Auth] 登录请求开始');
         state.isLoading = true;
         state.error = null;
       })
       
       // 登录成功
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log('✅ [Auth] 登录请求成功，更新状态');
         
         state.isLoading = false;
         state.token = action.payload.access_token;
@@ -374,7 +340,6 @@ const authSlice = createSlice({
       
       // 登录失败
       .addCase(loginUser.rejected, (state, action) => {
-        console.log('❌ [Auth] 登录请求失败，清除状态');
         
         state.isLoading = false;
         state.error = action.payload as string;
@@ -390,14 +355,12 @@ const authSlice = createSlice({
       
       // 注册开始
       .addCase(registerUser.pending, (state) => {
-        console.log('⏳ [Auth] 注册请求开始');
         state.isLoading = true;
         state.error = null;
       })
       
       // 注册成功
       .addCase(registerUser.fulfilled, (state, action) => {
-        console.log('✅ [Auth] 注册成功，但不自动登录');
         
         state.isLoading = false;
         state.user = action.payload;
@@ -409,7 +372,6 @@ const authSlice = createSlice({
       
       // 注册失败
       .addCase(registerUser.rejected, (state, action) => {
-        console.log('❌ [Auth] 注册失败');
         
         state.isLoading = false;
         state.error = action.payload as string;
@@ -419,7 +381,6 @@ const authSlice = createSlice({
       
       // 退出登录成功
       .addCase(logoutUser.fulfilled, (state) => {
-        console.log('✅ [Auth] 退出登录成功，重置所有状态');
         
         // 重置所有认证相关状态，但保持已初始化状态
         state.user = null;

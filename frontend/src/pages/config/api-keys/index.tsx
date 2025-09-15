@@ -37,8 +37,7 @@ export default function ApiKeysPage() {
 
   // 添加密钥成功后的回调
   const handleAddSuccess = () => {
-    // API Key 创建成功后，Redux 会自动更新列表，这里可以显示成功消息
-    console.log("API Key 添加成功");
+    // API Key 创建成功后，Redux 会自动更新列表
   };
 
   // 打开删除确认对话框
