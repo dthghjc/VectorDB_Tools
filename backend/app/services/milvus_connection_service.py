@@ -424,7 +424,7 @@ class MilvusConnectionService:
             connection_obj: 连接对象
             
         Returns:
-            脱敏后的 token 信息字符串
+            脱敏后的 token 信息字符串，便于用户识别但不泄露完整凭据
         """
         if not connection_obj.encrypted_token:
             return "未配置"
@@ -433,18 +433,23 @@ class MilvusConnectionService:
             from app.core.crypto import decrypt_sensitive_data
             token = decrypt_sensitive_data(connection_obj.encrypted_token)
             
-            # 如果是 username:password 格式，脱敏显示
+            # 如果是 username:password 格式，只显示用户名
             if ':' in token:
                 username, _ = token.split(':', 1)
-                return f"{username}:****"
+                # 如果用户名过长，也进行截断
+                if len(username) > 20:
+                    return f"{username[:15]}...***"
+                return f"{username}:***"
             else:
-                # 单纯 token，显示前几位和后几位
+                # 纯 token，显示首尾部分
                 if len(token) <= 8:
-                    return "****"
+                    return "***token***"
+                elif len(token) <= 16:
+                    return f"{token[:3]}***{token[-3:]}"
                 else:
-                    return f"{token[:4]}****{token[-4:]}"
-        except:
-            return "无法解析"
+                    return f"{token[:6]}***{token[-4:]}"
+        except Exception:
+            return "认证配置异常"
     
     def _format_connection_response(self, connection_obj: MilvusConnection) -> Dict[str, Any]:
         """

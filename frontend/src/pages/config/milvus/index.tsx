@@ -212,14 +212,22 @@ export default function MilvusConfigPage() {
                       <span className="text-muted-foreground/70">数据库:</span>
                       <span className="font-medium text-foreground ml-1">{connection.database_name}</span>
                     </p>
-                    {connection.token_info && (
-                      <p className="text-sm text-muted-foreground">
-                        <span className="text-muted-foreground/70">认证:</span>
-                        <span className="font-medium text-foreground ml-1 font-mono bg-muted px-2 py-0.5 rounded text-xs">
-                          {connection.token_info}
-                        </span>
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground/70">认证:</span>
+                      <span className={`font-medium ml-1 px-2 py-0.5 rounded text-xs font-mono ${
+                        connection.token_info === '未配置' 
+                          ? 'text-gray-700 bg-gray-100'
+                          : connection.token_info === '认证配置异常'
+                          ? 'text-red-700 bg-red-100'
+                          : 'text-green-700 bg-green-50 border border-green-200'
+                      }`}>
+                        {connection.token_info === '未配置' 
+                          ? '未配置' 
+                          : connection.token_info === '认证配置异常'
+                          ? '⚠ 配置异常'
+                          : connection.token_info}
+                      </span>
+                    </p>
                   </div>
 
                   {/* 描述信息 */}
