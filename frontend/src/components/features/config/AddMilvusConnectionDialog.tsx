@@ -233,6 +233,10 @@ export default function AddMilvusConnectionDialog({ onSuccess }: AddMilvusConnec
                 {validationErrors.database_name && (
                   <p className="text-xs text-red-500">{validationErrors.database_name}</p>
                 )}
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>• Zilliz Cloud Serverless 集群：固定使用 "default"</p>
+                  <p>• 专用集群和本地部署：可自定义数据库名称</p>
+                </div>
               </div>
 
             </div>

@@ -132,9 +132,11 @@ export default function MilvusConfigPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Milvus 连接管理</h1>
-          <p className="text-muted-foreground">
-            配置和测试 Milvus 数据库连接
-          </p>
+          <div className="space-y-1">
+            <p className="text-muted-foreground">
+              配置和测试 Milvus 数据库连接（支持 2.2.0+ 版本）
+            </p>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" asChild>
